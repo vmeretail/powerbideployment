@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PowerBIReleaseProcess": {
+      "commandName": "Project",
+      "commandLineArgs": "\"D:\\Sharepoint\\VME Coop\\Eposity Power BI Master - Documents\\ReleaseTest\" \"0.0.0\" \"8FDDBEF9-EDB9-454F-AA5C-7C89D6DA169B\""
+    }
+  }
+}
