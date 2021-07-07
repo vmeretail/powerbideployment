@@ -2,7 +2,7 @@
   "profiles": {
     "PowerBIReleaseProcess": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\Git\\TempPowerBI\", \"0.0.0\" \"SFDevelopment\""
+      "commandLineArgs": "\"D:\\Git\\TempPowerBI\" \"0.0.0\" \"SFDevelopment\""
     }
   }
 }

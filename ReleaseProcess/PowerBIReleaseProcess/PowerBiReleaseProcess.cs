@@ -101,10 +101,7 @@
                     throw new Exception("Report uploads failed");
                 }
 
-                //    // Now to zip the processed folder
-                //    ZipFile.CreateFromDirectory($"{releaseProfile.ReleaseFolder}\\processed", $"{releaseProfile.ReleaseFolder}\\{versionNumber}.zip", CompressionLevel.Optimal, false);
-
-                // TODO: Update github release notes
+                // Update github release notes
                 await this.UpdateGitHubReleaseNote(releaseProfile.Name, versionNumber, cancellationToken);
 
                 this.Logger.Info($"Organisation {releaseProfile.Name} Release Completed");
@@ -218,12 +215,6 @@
             foreach (String dataSet in dataSets)
             {
                 var success = await this.UploadDataSet(powerBiService, releaseProfile, dataSet, cancellationToken);
-
-                //// Move file to processed folder
-                //if (success)
-                //{
-                //    MoveProcessedFile(releaseProfile.ReleaseFolder, dataSet);
-                //}
             }
 
             this.Logger.Info("Datasets Uploaded Successfully");
@@ -307,12 +298,18 @@
 
                 Dictionary<String, String> parameters = new Dictionary<String, String>();
                 parameters.Add("DatabaseName", releaseProfile.ReadModelDatabaseName);
+                parameters.Add("DatabaseServer", releaseProfile.ReadModelDatabaseSever);
 
                 this.Logger.Info($"About to change Dataset {datasetFile} parameters");
                 await powerBiService.ChangeDatasetParameters(releaseProfile.GroupId, datasetId, parameters, cancellationToken);
 
                 this.Logger.Info($"Dataset {datasetFile} parameters changed sucessfully");
                 return true;
+            }
+            catch(InvalidOperationException iex)
+            {
+                this.Logger.Error(iex);
+                throw;
             }
             catch(Exception ex)
             {

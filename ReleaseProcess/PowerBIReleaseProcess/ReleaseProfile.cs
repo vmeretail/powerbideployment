@@ -53,5 +53,7 @@
         /// The name of the read model database.
         /// </value>
         public String ReadModelDatabaseName => $"OrganisationRead{this.OrganisationId}";
+
+        public String ReadModelDatabaseSever {get;set;}
     }
 }
