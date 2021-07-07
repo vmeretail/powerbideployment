@@ -117,6 +117,13 @@
             {
                 case ImportedType.Dataset:
                     Dataset dataset = importResponse.Body.Datasets.Single();
+
+                    if (dataset.IsRefreshable.HasValue && dataset.IsRefreshable.Value == true)
+                    {
+                        // We think this is an import dataset so bomb out the release process
+                        throw new Exception($"Possible Mixed Mode/Import dataset detected Dataset Name [{dataset.Name}], please verify and update");
+                    }
+
                     return dataset.Id;
                 case ImportedType.Report:
                     Report report = importResponse.Body.Reports.Single();
