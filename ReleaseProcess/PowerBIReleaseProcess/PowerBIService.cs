@@ -116,8 +116,16 @@
             switch(importType)
             {
                 case ImportedType.Dataset:
-                    Dataset dataset = importResponse.Body.Datasets.Single();
-                    return dataset.Id;
+                    Dataset datasetImport = importResponse.Body.Datasets.Single();
+                    var dataset = await this.PowerBIClient.Datasets.GetDatasetInGroupWithHttpMessagesAsync(groupId, datasetImport.Id, cancellationToken:cancellationToken);
+                    
+                    if (dataset.Body.IsRefreshable.HasValue && dataset.Body.IsRefreshable.Value == true)
+                    {
+                        // We think this is an import dataset so bomb out the release process
+                        throw new InvalidOperationException($"Possible Mixed Mode/Import dataset detected Dataset Name [{dataset.Body.Name}], please verify and update!!");
+                    }
+                    
+                    return dataset.Body.Id;
                 case ImportedType.Report:
                     Report report = importResponse.Body.Reports.Single();
                     return report.Id.ToString();
@@ -206,9 +214,27 @@
         {
             List<UpdateMashupParameterDetails> details = new List<UpdateMashupParameterDetails>();
 
+            HttpOperationResponse<MashupParameters> datasetParameters = await this.PowerBIClient.Datasets.GetParametersInGroupWithHttpMessagesAsync(groupId, datasetId, cancellationToken: cancellationToken);
+            var dataset = await this.PowerBIClient.Datasets.GetDatasetInGroupWithHttpMessagesAsync(groupId, datasetId, cancellationToken: cancellationToken);
+            List<String> missingParameterList = new List<String>();
+
             foreach (KeyValuePair<String, String> param in parameters)
             {
+                var foundParameter = datasetParameters.Body.Value.SingleOrDefault(p => p.Name == param.Key);
+                if (foundParameter == null)
+                {
+                        missingParameterList.Add(param.Key);
+                }
+                
                 details.Add(new UpdateMashupParameterDetails(param.Key, param.Value));
+            }
+
+            if (missingParameterList.Any())
+            {
+                // We have expected parameters missing from the dataset
+                string joined = string.Join(",", missingParameterList);
+
+                throw new InvalidOperationException($"The following parameters [{joined}] are missing from DataSet [{dataset.Body.Name}]");
             }
 
             UpdateMashupParametersRequest request = new UpdateMashupParametersRequest

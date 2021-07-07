@@ -45,7 +45,9 @@
         /// </summary>
         private static void LoadConfiguration()
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder().SetBasePath(Path.Combine(AppContext.BaseDirectory)).AddJsonFile("appsettings.json", optional:true);
+            IConfigurationBuilder builder = new ConfigurationBuilder().SetBasePath(Path.Combine(AppContext.BaseDirectory))
+                                                                      .AddJsonFile("appsettings.json", optional:true)
+                                                                      .AddJsonFile("appsettings.development.json", optional: true);
 
             Program.Configuration = builder.Build();
 
