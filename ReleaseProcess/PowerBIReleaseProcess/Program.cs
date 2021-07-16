@@ -11,8 +11,11 @@
     using System.Threading.Tasks;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Primitives;
+    using Microsoft.PowerBI.Api;
     using Microsoft.PowerBI.Api.Models;
+    using Microsoft.Rest;
     using Octokit;
+    using RestSharp;
 
     /// <summary>
     /// 
@@ -79,31 +82,44 @@
 
             ITokenService tokenService = new TokenService();
 
-            Func<String, IPowerBIService> powerBiServiceResolver = (token) =>
-                                                                   {
-                                                                       String powerBiApiUrl = Program.Configuration.GetSection("AppSettings:PowerBiApiUrl").Value;
-                                                                       Int32 fileImportCheckRetryAttempts =
-                                                                           Int32.Parse(Program.Configuration.GetSection("AppSettings:FileImportCheckRetryAttempts")
-                                                                                              .Value);
-                                                                       Int32 fileImportCheckSleepIntervalInSeconds =
-                                                                           Int32.Parse(Program.Configuration
-                                                                                              .GetSection("AppSettings:FileImportCheckSleepIntervalInSeconds").Value);
+            //Func<String, IPowerBIService> powerBiServiceResolver = (token) =>
+            //                                                       {
+            //                                                           String powerBiApiUrl = Program.Configuration.GetSection("AppSettings:PowerBiApiUrl").Value;
+            //                                                           Int32 fileImportCheckRetryAttempts =
+            //                                                               Int32.Parse(Program.Configuration.GetSection("AppSettings:FileImportCheckRetryAttempts")
+            //                                                                                  .Value);
+            //                                                           Int32 fileImportCheckSleepIntervalInSeconds =
+            //                                                               Int32.Parse(Program.Configuration
+            //                                                                                  .GetSection("AppSettings:FileImportCheckSleepIntervalInSeconds").Value);
 
-                                                                       return new PowerBIService(powerBiApiUrl,
-                                                                                                 token,
-                                                                                                 fileImportCheckRetryAttempts,
-                                                                                                 fileImportCheckSleepIntervalInSeconds);
-                                                                   };
-            Func<IGitHubService> gitHubServiceResolver = () =>
-                                                         {
-                                                             String gitHubApiUrl = Program.Configuration.GetSection("AppSettings:GitHubApiUrl").Value;
-                                                             String gitHubAccessToken = Program.Configuration.GetSection("AppSettings:GithubAccessToken").Value;
+            //                                                           TokenCredentials tokenCredentials = new TokenCredentials(token, "Bearer");
 
-                                                             return new GitHubService(gitHubApiUrl, gitHubAccessToken);
-                                                         };
-            IPowerBiReleaseProcess releaseProcess = new PowerBiReleaseProcess(tokenService, powerBiServiceResolver, gitHubServiceResolver);
+            //                                                           IPowerBIClient powerBiClient = new PowerBIClient(tokenCredentials);
+            //                                                           return new PowerBIService(powerBiApiUrl,
+            //                                                                                     powerBiClient,
+            //                                                                                     fileImportCheckRetryAttempts,
+            //                                                                                     fileImportCheckSleepIntervalInSeconds);
+            //
+            // };
+            String powerBiApiUrl = Program.Configuration.GetSection("AppSettings:PowerBiApiUrl").Value;
+            PowerBIClient powerBiClient = new PowerBIClient(new Uri(powerBiApiUrl), null);
+            IRestClient restClient = new RestClient(powerBiApiUrl);
+            Int32 fileImportCheckRetryAttempts = Int32.Parse(Program.Configuration.GetSection("AppSettings:FileImportCheckRetryAttempts").Value);
+            Int32 fileImportCheckSleepIntervalInSeconds = Int32.Parse(Program.Configuration.GetSection("AppSettings:FileImportCheckSleepIntervalInSeconds").Value);
 
-            await releaseProcess.DeployRelease(releasePackageLocation, releaseVersion, releaseProfile, CancellationToken.None);
+            PowerBIServiceState powerBiServiceState = new PowerBIServiceState(fileImportCheckRetryAttempts, fileImportCheckSleepIntervalInSeconds, powerBiClient,
+                                                                              restClient,)
+
+            //Func<IGitHubService> gitHubServiceResolver = () =>
+            //                                             {
+            //                                                 String gitHubApiUrl = Program.Configuration.GetSection("AppSettings:GitHubApiUrl").Value;
+            //                                                 String gitHubAccessToken = Program.Configuration.GetSection("AppSettings:GithubAccessToken").Value;
+
+            //                                                 return new GitHubService(gitHubApiUrl, gitHubAccessToken);
+            //                                             };
+            //IPowerBiReleaseProcess releaseProcess = new PowerBiReleaseProcess(tokenService, powerBiServiceResolver, gitHubServiceResolver);
+
+            //await releaseProcess.DeployRelease(releasePackageLocation, releaseVersion, releaseProfile, CancellationToken.None);
         }
         
         private static ReleaseProfile GetReleaseProfile(String organisationName)

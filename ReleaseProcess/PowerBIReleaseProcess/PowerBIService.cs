@@ -2,15 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Data.Common;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
     using System.Net.Http;
-    using System.Net.Http.Headers;
-    using System.Runtime.InteropServices;
+    using System.Runtime.CompilerServices;
     using System.Text;
-    using System.Text.Encodings.Web;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.PowerBI.Api;
@@ -18,113 +15,120 @@
     using Microsoft.Rest;
     using Newtonsoft.Json;
     using RestSharp;
-
-    public class PowerBIService : IPowerBIService
+    using RestSharp.Validation;
+    
+    public record PowerBIServiceState
     {
-        public PowerBIService(String powerBiUrl, String token, Int32 fileImportCheckRetryAttempts, Int32 fileImportCheckSleepIntervalInSeconds)
+        public Int32 FileImportCheckRetryAttempts { get; init; }
+
+        public Int32 FileImportCheckSleepIntervalInSeconds { get; init; }
+
+        public IPowerBIClient PowerBiClient { get; init; }
+
+        public IRestClient RestClient { get; init; }
+
+        public Guid GroupId { get; init; }
+        
+        public String BearerToken { get; init; }
+
+        public PowerBIServiceState(Int32 fileImportCheckRetryAttempts,
+                                   Int32 fileImportCheckSleepIntervalInSeconds,
+                                   IPowerBIClient powerBiClient,
+                                   IRestClient restClient,
+                                   String bearerToken,
+                                   Guid groupId)
         {
-            this.PowerBiUrl = powerBiUrl;
-            this.Token = token;
             this.FileImportCheckRetryAttempts = fileImportCheckRetryAttempts;
             this.FileImportCheckSleepIntervalInSeconds = fileImportCheckSleepIntervalInSeconds;
-            this.PowerBIClient = this.GetPowerBIClient(token);
-            this.RestClient = this.GetPowerBIHttpClient();
+            this.PowerBiClient = powerBiClient;
+            this.RestClient = restClient;
+            this.GroupId = groupId;
+            this.BearerToken = bearerToken;
         }
+    }
 
-        private readonly String PowerBiUrl;
-        private readonly String Token;
+    public static class PowerBIServiceStateExtensions
+    {
+       
+        public static async Task<List<Dataset>> GetDatasets(this PowerBIServiceState service,
+                                                            CancellationToken cancellationToken) =>
+            await service.PowerBiClient.GetDatasets(service.GroupId, cancellationToken);
 
-        private readonly Int32 FileImportCheckRetryAttempts;
+        public static async Task ChangeDatasetParameters(this PowerBIServiceState service,
+                                                         String datasetId,
+                                                   Dictionary<String, String> parameters,
+                                                   CancellationToken cancellationToken) =>
+            await service.PowerBiClient.ChangeDatasetParameters(service.GroupId, datasetId, parameters, cancellationToken);
 
-        private readonly Int32 FileImportCheckSleepIntervalInSeconds;
+        public static async Task<Guid> UploadDataSet(this PowerBIServiceState service,
+                                         String filePath,
+                                         String datasetDisplayName, 
+                                         CancellationToken cancellationToken) =>
+            await service.RestClient.UploadDataset(service.BearerToken, service.GroupId, filePath, datasetDisplayName, cancellationToken);
 
-        private readonly PowerBIClient PowerBIClient;
+        public static async Task<Guid> UploadReport(this PowerBIServiceState service,
+                                                    String datasetId,
+                                                    String filePath,
+                                              String reportDisplayName,
+                                              CancellationToken cancellationToken) =>
+            await service.RestClient.UploadReport(service.BearerToken, service.GroupId, datasetId, filePath, reportDisplayName, cancellationToken);
 
-        private readonly RestClient RestClient;
-        
-        private PowerBIClient GetPowerBIClient(String token)
+        public static async Task RebindReport(this PowerBIServiceState service,
+                                              Guid reportId,
+                                              String datasetId,
+                                              CancellationToken cancellationToken) =>
+            await service.PowerBiClient.RebindReport(service.GroupId, reportId, datasetId, cancellationToken);
+
+        public static async Task<String> CheckImportStatus(this PowerBIServiceState service,
+                                                           String importId,
+                                                           ImportedType importedType,
+                                                           CancellationToken cancellationToken) =>
+            await service.PowerBiClient.CheckImportStatus(service.GroupId,
+                                                          importId,
+                                                          service.FileImportCheckRetryAttempts,
+                                                          service.FileImportCheckSleepIntervalInSeconds,
+                                                          importedType,
+                                                          cancellationToken);
+
+        internal static async Task<String> CheckImportStatus(this IPowerBIClient powerBiClient, 
+                                                            Guid groupId,
+                                                            String importId,
+                                                            Int32 fileImportCheckRetryAttempts,
+                                                            Int32 fileImportCheckSleepIntervalInSeconds,
+                                                            ImportedType importedType,
+                                                            CancellationToken cancellationToken)
         {
-            TokenCredentials tokenCredentials = new TokenCredentials(token, "Bearer");
-            return new PowerBIClient(new Uri(this.PowerBiUrl), tokenCredentials);
-        }
-
-        private RestClient GetPowerBIHttpClient()
-        {
-            var restClient = new RestClient(this.PowerBiUrl);
-            return restClient;
-        }
-
-        public async Task<Guid> UploadDataset(Guid groupId,
-                                        String filePath,
-                                        String datasetDisplayName,
-                                        CancellationToken cancellationToken)
-        {
-                String requestUri =
-                    $"{this.PowerBiUrl}/v1.0/myorg/groups/{groupId}/imports?dataSetDisplayName={datasetDisplayName}&nameConflict=CreateOrOverwrite&skipReport=True";
-
-                RestRequest request = new RestRequest(new Uri(requestUri), Method.POST);
-                request.AddHeader("Authorization", $"Bearer {this.Token}");
-                request.AddFile("file0", filePath, "application/x-zip-compressed");
-
-                IRestResponse response = await this.RestClient.ExecuteAsync(request, cancellationToken);
-
-                if (response.IsSuccessful == false)
-                {
-                    // throw an error
-                    throw new HttpRequestException($"Error uploading dataset [{filePath}], Http Response is [{response.Content}]");
-                }
-
-                // Now check the status of the import call at the Power BI serivce
-                var definition = new
-                                 {
-                                     id = Guid.Empty
-                                 };
-                // Get the import id from the import response
-                var responseDto = JsonConvert.DeserializeAnonymousType(response.Content, definition);
-
-                return responseDto.id;
-        }
-
-        /// <summary>
-        /// Checks the import status.
-        /// </summary>
-        /// <param name="groupId">The group identifier.</param>
-        /// <param name="importId">The import identifier.</param>
-        /// <param name="importType">Type of the import.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="Exception">Unable to verify import successful for {importType} with import Id {importId}</exception>
-        public async Task<String> CheckImportStatus(Guid groupId, String importId, ImportedType importType, CancellationToken cancellationToken)
-        {
-            var importResponse = await this.PowerBIClient.Imports.GetImportInGroupWithHttpMessagesAsync(groupId, Guid.Parse(importId), null, cancellationToken);
-            for (Int32 i = 0; i < this.FileImportCheckRetryAttempts; i++)
+            var importResponse = await powerBiClient.Imports.GetImportInGroupWithHttpMessagesAsync(groupId, Guid.Parse(importId), null, cancellationToken);
+            for (Int32 i = 0; i < fileImportCheckRetryAttempts; i++)
             {
                 if (importResponse.Body.ImportState == "Succeeded")
                 {
                     break;
                 }
 
-                Thread.Sleep(TimeSpan.FromSeconds(this.FileImportCheckSleepIntervalInSeconds));
-                importResponse = await this.PowerBIClient.Imports.GetImportInGroupWithHttpMessagesAsync(groupId, Guid.Parse(importId), null, cancellationToken);
+                Thread.Sleep(TimeSpan.FromSeconds(fileImportCheckSleepIntervalInSeconds));
+                importResponse = await powerBiClient.Imports.GetImportInGroupWithHttpMessagesAsync(groupId, Guid.Parse(importId), null, cancellationToken);
             }
 
             if (importResponse.Body.ImportState != "Succeeded")
             {
-                throw new Exception($"Unable to verify import successful for {importType} with import Id {importId}");
+                throw new Exception($"Unable to verify import successful for {importedType} with import Id {importId}");
             }
 
-            switch(importType)
+            switch (importedType)
             {
                 case ImportedType.Dataset:
                     Dataset datasetImport = importResponse.Body.Datasets.Single();
-                    var dataset = await this.PowerBIClient.Datasets.GetDatasetInGroupWithHttpMessagesAsync(groupId, datasetImport.Id, cancellationToken:cancellationToken);
-                    
-                    if (dataset.Body.IsRefreshable.HasValue && dataset.Body.IsRefreshable.Value == true)
+                    var dataset =
+                        await powerBiClient.Datasets.GetDatasetInGroupWithHttpMessagesAsync(groupId, datasetImport.Id, cancellationToken: cancellationToken);
+
+                    if (dataset.Body.IsRefreshable.HasValue && dataset.Body.IsRefreshable.Value)
                     {
                         // We think this is an import dataset so bomb out the release process
-                        throw new InvalidOperationException($"Possible Mixed Mode/Import dataset detected Dataset Name [{dataset.Body.Name}], please verify and update!!");
+                        throw
+                            new InvalidOperationException($"Possible Mixed Mode/Import dataset detected Dataset Name [{dataset.Body.Name}], please verify and update!!");
                     }
-                    
+
                     return dataset.Body.Id;
                 case ImportedType.Report:
                     Report report = importResponse.Body.Reports.Single();
@@ -132,49 +136,182 @@
                 default:
                     return null;
             }
-            
         }
 
-        public async Task<Guid> UploadReport(Guid groupId,
-                                       String filePath,
-                                       String reportDisplayName,
-                                       String datasetId,
-                                       CancellationToken cancellationToken)
+        internal static async Task RebindReport(this IPowerBIClient powerBiClient, 
+                                         Guid groupId,
+                                         Guid reportId,
+                                         String datasetId,
+                                         CancellationToken cancellationToken)
+        {
+            RebindReportRequest rebindReportRequest = new RebindReportRequest(datasetId);
+
+            await powerBiClient.Reports.RebindReportInGroupWithHttpMessagesAsync(groupId, reportId, rebindReportRequest, null, cancellationToken);
+        }
+
+        internal static async Task<Guid> UploadDataset(this IRestClient restClient,
+                                                       String bearerToken,
+                                                       Guid groupId,
+                                              String filePath,
+                                              String datasetDisplayName,
+                                              CancellationToken cancellationToken)
+        {
+            String requestUri =
+                $"{restClient.BaseUrl}/v1.0/myorg/groups/{groupId}/imports?dataSetDisplayName={datasetDisplayName}&nameConflict=CreateOrOverwrite&skipReport=True";
+            RestRequest request = new RestRequest(new Uri(requestUri), Method.POST);
+            request.AddHeader("Authorization", $"Bearer {bearerToken}");
+            request.AddFile("file0", filePath, "application/x-zip-compressed");
+
+            IRestResponse response = await restClient.ExecuteAsync(request, cancellationToken);
+
+            if (response.IsSuccessful == false)
+            {
+                // throw an error
+                throw new HttpRequestException($"Error uploading dataset [{filePath}], Http Response is [{response.Content}]");
+            }
+
+            // Now check the status of the import call at the Power BI serivce
+            var definition = new
+                             {
+                                 id = Guid.Empty
+                             };
+            // Get the import id from the import response
+            var responseDto = JsonConvert.DeserializeAnonymousType(response.Content, definition);
+
+            return responseDto.id;
+        }
+
+        internal static async Task<Guid> UploadReport(this IRestClient restClient,
+                                                String bearerToken,
+                                                Guid groupId,
+                                                String datasetId,
+                                                String filePath,
+                                                String reportDisplayName,
+                                                CancellationToken cancellationToken)
         {
             UpdateConnection(filePath, datasetId);
 
             // Manual method as cant use client :|
-            String requestUri =
-                $"{this.PowerBiUrl}/v1.0/myorg/groups/{groupId}/imports?dataSetDisplayName={reportDisplayName}&nameConflict=CreateOrOverwrite";
-            
+            String requestUri = $"{restClient.BaseUrl}/v1.0/myorg/groups/{groupId}/imports?dataSetDisplayName={reportDisplayName}&nameConflict=CreateOrOverwrite";
+
             RestRequest request = new RestRequest(new Uri(requestUri), Method.POST);
-            request.AddHeader("Authorization", $"Bearer {this.Token}");
+            request.AddHeader("Authorization", $"Bearer {bearerToken}");
             request.AddFile("file0", filePath, "application/x-zip-compressed");
 
-            IRestResponse response = await this.RestClient.ExecuteAsync(request, cancellationToken);
+            IRestResponse response = await restClient.ExecuteAsync(request, cancellationToken);
 
             if (response.IsSuccessful == false)
             {
                 // throw an error
                 throw new Exception($"Error uploading report [{filePath}], Http Response is [{response.Content}]");
             }
-            var definition = new { id = Guid.Empty };
+
+            var definition = new
+                             {
+                                 id = Guid.Empty
+                             };
 
             // Get the report id from the reponse
             var responseDto = JsonConvert.DeserializeAnonymousType(response.Content, definition);
-            
+
             return responseDto.id;
         }
 
-        public static void UpdateConnection(string filepath, String datasetId)
+        
+
+        internal static async Task ChangeDatasetParameters(this IPowerBIClient powerBiClient,
+                                                   Guid groupId,String datasetId,
+                                                   Dictionary<String, String> parameters,
+                                                   CancellationToken cancellationToken)
+        {
+            HttpOperationResponse<MashupParameters> datasetParameters =
+                await powerBiClient.Datasets.GetParametersInGroupWithHttpMessagesAsync(groupId, datasetId, cancellationToken: cancellationToken);
+
+            HttpOperationResponse<Dataset> dataset = await powerBiClient.Datasets.GetDatasetInGroupWithHttpMessagesAsync(groupId, datasetId, cancellationToken: cancellationToken);
+
+            UpdateMashupParametersRequest request = CreateUpdateMashupParametersRequest(dataset.Body.Name, parameters, datasetParameters.Body);
+
+            HttpOperationResponse response =
+                await powerBiClient.Datasets.UpdateParametersInGroupWithHttpMessagesAsync(groupId, datasetId, request, cancellationToken: cancellationToken);
+
+            if (response.Response.IsSuccessStatusCode == false)
+            {
+                throw new InvalidOperationException($"Error changing parameters on dataset [{dataset.Body.Name}].");
+            }
+
+            // Do a second check (ensure the value has been changed)
+            HttpOperationResponse<MashupParameters> updatedDatasetParameters =
+                await powerBiClient.Datasets.GetParametersInGroupWithHttpMessagesAsync(groupId, datasetId, cancellationToken: cancellationToken);
+
+            // Do a belt an braces check on the parameter updates
+            ValidateParameterUpdates(dataset.Body.Name, parameters, updatedDatasetParameters.Body);
+            return;
+        }
+
+        internal static Dictionary<String, String> ValidateDatasetParameters(String datasetName,
+                                                                           Dictionary<String, String> expectedParameters,
+                                                                           List<String> actualDatasetParameters)
+        {
+            List<KeyValuePair<String, String>> missingParameters = expectedParameters.Where(p => actualDatasetParameters.Select(x => x).Contains(p.Key) == false).Select(m => m).ToList();
+
+            if (missingParameters.Any())
+            {
+                // We have expected parameters missing from the dataset
+                String joined = string.Join(",", missingParameters);
+
+                throw new InvalidOperationException($"The following parameters [{joined}] are missing from DataSet [{datasetName}]");
+            }
+
+            return expectedParameters;
+        }
+
+        internal static UpdateMashupParameterDetails UpdateMashupParameterDetailsFactory(KeyValuePair<String, String> expectedParameter)
+        {
+            return new UpdateMashupParameterDetails(expectedParameter.Key, expectedParameter.Value);
+        }
+
+        internal static UpdateMashupParametersRequest CreateUpdateMashupParametersRequest(String datasetName,
+                                                                                         Dictionary<String, String> expectedParameters,
+                                                                                         MashupParameters actualDatasetParameters)
+        {
+            UpdateMashupParametersRequest state = new UpdateMashupParametersRequest()
+                                                  {
+                                                      UpdateDetails = new List<UpdateMashupParameterDetails>()
+                                                  };
+
+            return ValidateDatasetParameters(datasetName, expectedParameters, actualDatasetParameters.Value.Select(v => v.Name).ToList())
+                .Select(UpdateMashupParameterDetailsFactory).ToList().Aggregate(state,
+                                                                                               (request,
+                                                                                                details) =>
+                                                                                               {
+                                                                                                   request.UpdateDetails.Add(details);
+                                                                                                   return request;
+                                                                                               });
+        }
+
+        internal static void ValidateParameterUpdates(String datasetName,
+                                                    Dictionary<String, String> expectedParameters,
+                                                    MashupParameters updatedDatasetParameters)
+        {
+            var parametersWithIncorrectValue = updatedDatasetParameters.Value.Select(e => e).Where(g => expectedParameters.Contains(new KeyValuePair<String, String>(g.Name, g.CurrentValue)) == false);
+            var errors = parametersWithIncorrectValue.Select(g => $"Parameter Name {g.Name} has the incorrect value [{g.CurrentValue}]").ToList();
+
+            if (errors.Any())
+            {
+                String joined = string.Join(",", errors);
+                throw new InvalidOperationException($"The following errors occurred while updating the dataset [{datasetName}] Errors [{joined}]");
+            }
+        }
+
+        internal static void UpdateConnection(String filepath,
+                                            String datasetId)
         {
             using (ZipArchive archive = new ZipArchive(File.Open(filepath, FileMode.Open), ZipArchiveMode.Update, false, null))
             {
                 ZipArchiveEntry entry = archive.GetEntry("Connections");
-                string newstring;
+                String newstring;
                 using (var sr = new StreamReader(entry.Open(), Encoding.Default))
                 {
-                    
                     var jsonText = sr.ReadToEnd();
                     var connectionDetails = JsonConvert.DeserializeObject<PowerBiConnectionDetails>(jsonText);
                     var conn = connectionDetails.Connections.First();
@@ -192,84 +329,50 @@
             }
         }
 
-        public async Task RebindReport(Guid groupId,
-                                       Guid reportId,
-                                       String datasetId,
-                                       CancellationToken cancellationToken)
+        internal static async Task<List<Dataset>> GetDatasets(this IPowerBIClient powerBiClient,
+                                                              Guid groupId,
+                                                              CancellationToken cancellationToken)
         {
-            RebindReportRequest rebindReportRequest = new RebindReportRequest(datasetId);
-
-            await this.PowerBIClient.Reports.RebindReportInGroupWithHttpMessagesAsync(groupId,reportId, rebindReportRequest, null, cancellationToken);
-        }
-
-        public async Task<List<Dataset>> GetDataSets(Guid groupId,
-                                                     CancellationToken cancellationToken)
-        {
-            var response = await this.PowerBIClient.Datasets.GetDatasetsInGroupWithHttpMessagesAsync(groupId, null, cancellationToken);
+            HttpOperationResponse<Datasets> response = await powerBiClient.Datasets.GetDatasetsInGroupWithHttpMessagesAsync(groupId, null, cancellationToken);
 
             return response.Body.Value.ToList();
         }
-
-        public async Task ChangeDatasetParameters(Guid groupId, String datasetId, Dictionary<String,String> parameters, CancellationToken cancellationToken)
-        {
-            List<UpdateMashupParameterDetails> details = new List<UpdateMashupParameterDetails>();
-
-            HttpOperationResponse<MashupParameters> datasetParameters = await this.PowerBIClient.Datasets.GetParametersInGroupWithHttpMessagesAsync(groupId, datasetId, cancellationToken: cancellationToken);
-            var dataset = await this.PowerBIClient.Datasets.GetDatasetInGroupWithHttpMessagesAsync(groupId, datasetId, cancellationToken: cancellationToken);
-            List<String> missingParameterList = new List<String>();
-
-            foreach (KeyValuePair<String, String> param in parameters)
-            {
-                var foundParameter = datasetParameters.Body.Value.SingleOrDefault(p => p.Name == param.Key);
-                if (foundParameter == null)
-                {
-                        missingParameterList.Add(param.Key);
-                }
-                
-                details.Add(new UpdateMashupParameterDetails(param.Key, param.Value));
-            }
-
-            if (missingParameterList.Any())
-            {
-                // We have expected parameters missing from the dataset
-                string joined = string.Join(",", missingParameterList);
-
-                throw new InvalidOperationException($"The following parameters [{joined}] are missing from DataSet [{dataset.Body.Name}]");
-            }
-
-            UpdateMashupParametersRequest request = new UpdateMashupParametersRequest
-            {
-                UpdateDetails = details
-            };
-
-            var response = await this.PowerBIClient.Datasets.UpdateParametersInGroupWithHttpMessagesAsync(groupId, datasetId, request, cancellationToken: cancellationToken);
-
-            if (response.Response.IsSuccessStatusCode == false)
-            {
-                throw new Exception("Error changing parameters on dataset.");
-            }
-        }
     }
-
+    
     public enum ImportedType
     {
         Dataset,
+
         Report
     }
 
     public class Connection
     {
-        public string Name { get; set; }
-        public string ConnectionString { get; set; }
-        public string ConnectionType { get; set; }
-        public int PbiServiceModelId { get; set; }
-        public string PbiModelVirtualServerName { get; set; }
-        public string PbiModelDatabaseName { get; set; }
+        #region Properties
+
+        public String ConnectionString { get; set; }
+
+        public String ConnectionType { get; set; }
+
+        public String Name { get; set; }
+
+        public String PbiModelDatabaseName { get; set; }
+
+        public String PbiModelVirtualServerName { get; set; }
+
+        public Int32 PbiServiceModelId { get; set; }
+
+        #endregion
     }
 
     public class PowerBiConnectionDetails
     {
-        public int Version { get; set; }
+        #region Properties
+
         public List<Connection> Connections { get; set; }
+
+        public Int32 Version { get; set; }
+
+        #endregion
     }
 }
