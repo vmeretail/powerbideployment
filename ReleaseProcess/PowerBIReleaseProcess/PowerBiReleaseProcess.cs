@@ -361,7 +361,12 @@
 
                 return true;
             }
-            catch(Exception ex)
+            catch (InvalidOperationException iex)
+            {
+                this.Logger.Error(iex);
+                throw;
+            }
+            catch (Exception ex)
             {
                 return false;
             }

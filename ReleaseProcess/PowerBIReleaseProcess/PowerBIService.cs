@@ -110,7 +110,7 @@
 
             if (importResponse.Body.ImportState != "Succeeded")
             {
-                throw new Exception($"Unable to verify import successful for {importType} with import Id {importId}");
+                throw new InvalidOperationException($"Unable to verify import successful for {importType} with import Id {importId}");
             }
 
             switch(importType)
@@ -199,7 +199,12 @@
         {
             RebindReportRequest rebindReportRequest = new RebindReportRequest(datasetId);
 
-            await this.PowerBIClient.Reports.RebindReportInGroupWithHttpMessagesAsync(groupId,reportId, rebindReportRequest, null, cancellationToken);
+            var response = await this.PowerBIClient.Reports.RebindReportInGroupWithHttpMessagesAsync(groupId,reportId, rebindReportRequest, null, cancellationToken);
+
+            if (response.Response.IsSuccessStatusCode == false)
+            {
+                throw new InvalidOperationException("Error rebinding report");
+            }
         }
 
         public async Task<List<Dataset>> GetDataSets(Guid groupId,
@@ -246,7 +251,7 @@
 
             if (response.Response.IsSuccessStatusCode == false)
             {
-                throw new Exception("Error changing parameters on dataset.");
+                throw new InvalidOperationException("Error changing parameters on dataset.");
             }
         }
     }
