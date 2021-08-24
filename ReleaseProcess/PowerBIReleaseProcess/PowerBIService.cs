@@ -117,12 +117,20 @@
             {
                 case ImportedType.Dataset:
                     Dataset datasetImport = importResponse.Body.Datasets.Single();
-                    var dataset = await this.PowerBIClient.Datasets.GetDatasetInGroupWithHttpMessagesAsync(groupId, datasetImport.Id, cancellationToken:cancellationToken);
+                    HttpOperationResponse<Dataset> dataset = await this.PowerBIClient.Datasets.GetDatasetInGroupWithHttpMessagesAsync(groupId, datasetImport.Id, cancellationToken:cancellationToken);
                     
                     if (dataset.Body.IsRefreshable.HasValue && dataset.Body.IsRefreshable.Value == true)
                     {
                         // We think this is an import dataset so bomb out the release process
                         throw new InvalidOperationException($"Possible Mixed Mode/Import dataset detected Dataset Name [{dataset.Body.Name}], please verify and update!!");
+                    }
+
+                    HttpOperationResponse<Datasources> dataSources =
+                        await this.PowerBIClient.Datasets.GetDatasourcesInGroupWithHttpMessagesAsync(groupId, dataset.Body.Id, cancellationToken:cancellationToken);
+
+                    if (dataSources.Body.Value.Count > 1)
+                    {
+                        throw new InvalidOperationException($"Dataset Name [{dataset.Body.Name}] has more than once datasource, please verify and update!!");
                     }
                     
                     return dataset.Body.Id;
