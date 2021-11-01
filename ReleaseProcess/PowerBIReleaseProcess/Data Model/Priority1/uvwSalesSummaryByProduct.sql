@@ -1,0 +1,26 @@
+CREATE OR ALTER VIEW uvwSalesSummaryByProduct
+AS
+SELECT 
+			[AggregateId]
+           ,[StoreId]
+           ,[CompletedDate]
+           ,[Department]
+           ,[Section]
+           ,[Subsection]
+           ,[ProductDescription]
+           ,[TaxRate]
+           ,[PaymentType]
+           ,[Reason Code Type]
+           ,[TransactionStatus]
+           ,[DiscountType]
+           ,[Tax Rate Count]
+           ,[SALE exc VAT]
+           ,[SALE inc VAT]
+           ,[Margin £]
+           ,[YearWeekNumber]
+           ,[Year]
+           ,[Week]
+           ,[DayOfWeekShort]
+           ,[DayOfWeek]
+		   ,[Store]
+FROM SalesSummaryByProduct

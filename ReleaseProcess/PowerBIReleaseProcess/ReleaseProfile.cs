@@ -14,6 +14,7 @@
         /// The identifier.
         /// </value>
         public Int32 Id { get; set; }
+        
         /// <summary>
         /// Gets or sets the name.
         /// </summary>
@@ -55,5 +56,29 @@
         public String ReadModelDatabaseName => $"OrganisationRead{this.OrganisationId}";
 
         public String ReadModelDatabaseSever {get;set;}
+
+        /// <summary>
+        /// Gets or sets the user id.
+        /// </summary>
+        /// <value>
+        /// The user id.
+        /// </value>
+        public String UserId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Password.
+        /// </summary>
+        /// <value>
+        /// The password.
+        /// </value>
+        public String Password { get; set; }
+
+        /// <summary>
+        /// Gets or sets the connection string.
+        /// </summary>
+        /// <value>
+        /// The connection string.
+        /// </value>
+        public String ConnectionString => $"Data Source={this.ReadModelDatabaseSever};Initial Catalog={this.ReadModelDatabaseName};User ID={this.UserId};Password={this.Password}";
     }
 }

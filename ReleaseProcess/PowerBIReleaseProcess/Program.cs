@@ -3,16 +3,13 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.IO.Compression;
     using System.Linq;
-    using System.Net.NetworkInformation;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Primitives;
-    using Microsoft.PowerBI.Api.Models;
-    using Octokit;
+    using Microsoft.Extensions.Logging;
+    using NLog.Extensions.Logging;
+    using Vme.Logging;
 
     /// <summary>
     /// 
@@ -68,6 +65,8 @@
                 return;
             }
 
+            Logger.Initialise(new LoggerFactory().AddNLog().CreateLogger("Logger"));
+
             // Get the first argument (this is the release package location)
             String releasePackageLocation = args[0];
 
@@ -76,6 +75,10 @@
             
             // Get the second argument (this is the customer)
             ReleaseProfile releaseProfile = Program.GetReleaseProfile(args[2]);
+
+            DatabaseManager databaseManager = new DatabaseManager(releaseProfile.ConnectionString);
+
+            await databaseManager.RunScripts();
 
             ITokenService tokenService = new TokenService();
 
