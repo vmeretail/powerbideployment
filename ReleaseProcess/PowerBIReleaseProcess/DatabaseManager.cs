@@ -35,7 +35,6 @@
         public async Task RunScripts()
         {
             await this.CreateDataModelViews();
-            await this.CreateReportingViews();
             await this.CreateStoredProcedures();
         }
         
@@ -47,7 +46,7 @@
             String scriptsFolder = $@"{this.ExecutingAssemblyFolder}/Data Model";
             
             String[] directiories = Directory.GetDirectories(scriptsFolder);
-            directiories = directiories.Where(d => d.Contains("ReportingViews") == false && d.Contains("StoredProcedures") == false).OrderBy(d => d).ToArray();
+            directiories = directiories.Where(d => d.Contains("StoredProcedures") == false).OrderBy(d => d).ToArray();
 
             foreach (String directory in directiories)
             {
@@ -56,24 +55,6 @@
                 foreach (String sqlFile in sqlFiles.OrderBy(x => x))
                 {
                     await this.ExecuteScript(sqlFile);                    
-                }
-            }
-        }
-
-        public async Task CreateReportingViews()
-        {
-            String scriptsFolder = $@"{this.ExecutingAssemblyFolder}/Data Model/ReportingViews";
-
-            String[] directiories = Directory.GetDirectories(scriptsFolder);
-            directiories = directiories.OrderBy(d => d).ToArray();
-
-            foreach (String directory in directiories)
-            {
-                String[] sqlFiles = Directory.GetFiles(directory, "*.sql");
-
-                foreach (String sqlFile in sqlFiles.OrderBy(x => x))
-                {
-                    await this.ExecuteScript(sqlFile);
                 }
             }
         }
