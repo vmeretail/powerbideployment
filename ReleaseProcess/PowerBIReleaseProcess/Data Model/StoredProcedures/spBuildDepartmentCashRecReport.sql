@@ -6,7 +6,7 @@ AS
 	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = salestransactionline.aggregateId
 	where salestransactioncompleted.CompletedDate >= @reportStartDate
 
-	delete from CashRecReporting WHERE ReportDate >= @reportStartDate
+	delete from CashRecReporting WHERE ReportDate >= @reportStartDate and DepartmentId = @DepartmentId
 
 	select 'Total Sales'  as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, count(distinct salestransactioncompleted.aggregateId) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
 	sum(salestransactioncompleted.MarginValue) as marginTotal
