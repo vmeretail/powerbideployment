@@ -10,7 +10,7 @@ SELECT storeproduct.StoreProductId as [ProductId],
 
 	   priceState.Price as [StandardRetailPriceInc],
 	   (ISNULL(priceState.Price,0) / (taxrate.Rate + 1)) as [StandardRetailPriceEx],
-	   
+
 	   storeproduct.CurrentMPL as CurrentMPL,
 	   storeproduct.PreviousMPL as PreviousMPL,
 	   storeproduct.LastMPLChanged as LastMPLChangedDateTime,
@@ -31,7 +31,7 @@ SELECT storeproduct.StoreProductId as [ProductId],
 		ELSE FORMAT (storeproduct.LastTimeOutOfStock, 'dd MMMM yyyy') 
 	   END as LastTimeOutOfStockString,
 	   storeproduct.LastTimeOutOfStock as LastTimeOutOfStockDateTime,
-	   
+
 	   organisationproduct.Description as [ProductDescription],
 	   organisationproduct.ExternalProductId,
 	   organisationproduct.ItemSize,
@@ -54,7 +54,7 @@ SELECT storeproduct.StoreProductId as [ProductId],
 	   -- Margin Values
 	   priceState.MarginValue,
 	   priceState.MarginPercent as 'Margin%',
-	   
+
 	   storeproduct.NumberOfOrdersSinceLastDelivery as [Number Of Orders Since Last Delivery],
 	   CASE
 		WHEN CONVERT(DATE, FirstActivity) = CONVERT(DATE, GETDATE()) THEN 
@@ -65,7 +65,7 @@ SELECT storeproduct.StoreProductId as [ProductId],
 	   storeproduct.FailedDeliveryCountSinceLastDelivery as [NumberOfFailedDeliveriesSinceLastDelivery],
 
 	   organisationproduct.Description + ' ' + organisationproduct.ExternalProductId + ' ' + organisationproduct.Barcode + ' ' + organisationproduct.HighestPrioritySupplierSic as ProductFilter
-	   
+
 FROM StoreProductStateProjection storeproduct
 inner join StoreProjectionState store on store.StoreReportingId = storeproduct.StoreReportingId
 inner join OrganisationProductProjectionState organisationproduct on organisationproduct.OrganisationProductReportingId = storeproduct.OrganisationProductReportingId

@@ -51,4 +51,3 @@ SELECT
 		  AND CASE WHEN salestransactionline.IsUnknownProduct = 1 THEN 1 ELSE salestransactionline.LineTotalExc END != 0
 		  and salestransactionline.IsRefund != 1
 		  and ISNULL(pocProductsView.CostPrice, 0.01) > 0.001 -- This is to filter out lottery type products which have a cost price of 0.001
-

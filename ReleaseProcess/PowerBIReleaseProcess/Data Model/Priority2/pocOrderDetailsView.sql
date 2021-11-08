@@ -27,7 +27,7 @@ SUM(ISNULL(NumberOfCasesDelivered,0)) as [DeliveredQty],
 [Cases Over] = SUM(CASE 
 					WHEN ISNULL(NumberOfCasesDelivered,0) - ISNULL(NumberOfCasesOrdered,0) <= 0 THEN 0 
 					ELSE ISNULL(NumberOfCasesDelivered,0) - ISNULL(NumberOfCasesOrdered,0) END),
-	
+
 [Under Delivered Count] = SUM(CASE WHEN ISNULL(NumberOfCasesDelivered,0) < ISNULL(NumberOfCasesOrdered,0)	 THEN 1 ELSE 0 END) ,
 [Over Delivered Count] = SUM(CASE WHEN ISNULL(NumberOfCasesDelivered,0) > ISNULL(NumberOfCasesOrdered,0)	 THEN 1 ELSE 0 END) ,
 [SLA Met Count] = SUM(CASE WHEN pocDeliveryDetailsView.DeliveryDate <= NULL AND ISNULL(NumberOfCasesDelivered,0) >=  ISNULL(NumberOfCasesOrdered,0)	     THEN 1 ELSE 0 END),
@@ -43,7 +43,7 @@ from orderItemProjectionState orderItem
 inner join [order] on orderItem.OrderId = [order].orderId
 inner join StoreProductStateProjection storeProduct on orderitem.StoreProductReportingId = storeproduct.StoreProductReportingId
 inner join supplierproduct on supplierproduct.Sic = orderItem.Sic and supplierproduct.OrganisationProductId = orderItem.OrganisationProductId and supplierproduct.SupplierId = [order].SupplierId
-left outer join pocDeliveryDetailsView on pocDeliveryDetailsView.OrderId = [order].OrderId and pocDeliveryDetailsView.[ProductReportingId] = orderItem.StoreProductReportingId
+left outer join pocDeliveryDetailsView on pocDeliveryDetailsView.OrderId = [order].OrderId and pocDeliveryDetailsView.[ProductReportingId] = orderItem.StoreProductReportingId and pocDeliveryDetailsView.SIC = orderItem.SIC
 
 GROUP BY [order].OrderId,
 [order].ExternalOrderId,

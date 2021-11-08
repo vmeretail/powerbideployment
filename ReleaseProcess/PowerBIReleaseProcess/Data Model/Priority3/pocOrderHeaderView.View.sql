@@ -50,4 +50,3 @@ GROUP BY [order].OrderId,
 [order].ConfirmedDateTime,
 [order].DeliveredDateTime,
 COALESCE(DeliveredDateTime, PartiallyDeliveredDateTIme, '0001-01-01')
-

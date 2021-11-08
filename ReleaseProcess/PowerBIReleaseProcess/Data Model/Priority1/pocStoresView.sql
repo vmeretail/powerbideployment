@@ -13,4 +13,3 @@ SELECT
 	StoreReportingId
 FROM StoreProjectionState
 WHERE StoreStatus = 2
-

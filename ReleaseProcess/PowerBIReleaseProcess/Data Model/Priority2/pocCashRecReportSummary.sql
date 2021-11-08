@@ -31,6 +31,3 @@ pivot
 sum(value)
 for col in ( [previous_basketCount], [previous_basketTotal], [previous_marginTotal], [current_basketCount], [current_basketTotal],[current_marginTotal]
 )) piv) result
-
-
-

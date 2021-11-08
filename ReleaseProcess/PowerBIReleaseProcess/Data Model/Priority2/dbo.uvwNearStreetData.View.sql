@@ -19,6 +19,3 @@ INNER JOIN organisationproductprice on organisationproductprice.OrganisationProd
 INNER JOIN StoreProductStateProjection StoreProductState on StoreProductState.StoreProductId = storeproduct.StoreProductId
 where StoreProductState.CurrentStockLevel > 0
 AND StoreProductState.LastSale > DATEADD(WEEK, -4, GETDATE())
-
-
-
