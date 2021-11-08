@@ -80,9 +80,9 @@ SELECT
 FROM (
 	SELECT * 
 	FROM Promotions
-	
+
 	UNION ALL
-	
+
 	SELECT * 
 	FROM Sales
 ) allProducts

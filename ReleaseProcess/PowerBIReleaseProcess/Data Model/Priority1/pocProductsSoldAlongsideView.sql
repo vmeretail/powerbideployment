@@ -18,6 +18,4 @@ inner join organisationproduct aop on aop.OrganisationProductId = a.Organisation
 inner join StoreProductStateProjection c1 on c1.StoreProductReportingId = ai.[consequents]
 inner join storeproduct c on c.StoreProductId = c1.StoreProductId
 inner join organisationproduct cop on cop.OrganisationProductId = c.OrganisationProductId
-inner join store s on s.StoreId = a.StoreId	
-
-
+inner join store s on s.StoreId = a.StoreId

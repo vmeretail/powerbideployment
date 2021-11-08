@@ -21,6 +21,3 @@ SELECT
 	[Is Refund]					= salestransactioncompleted.IsRefund,
 	[Line Count] =				salestransactioncompleted.SalesTransactionLineCount
 FROM salestransactioncompleted
-
-
-
