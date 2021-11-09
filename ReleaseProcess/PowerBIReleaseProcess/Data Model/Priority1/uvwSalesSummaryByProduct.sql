@@ -23,7 +23,7 @@ AS
         ,[DayOfWeekShort]
         ,[DayOfWeek]
 	    ,store.[Name] [store] 
-    FROM SalesSummaryByProductTest
-    INNER JOIN producthierarchy ON SalesSummaryByProductTest.subSectionId = producthierarchy.subSectionId
-    INNER JOIN organisationproduct ON SalesSummaryByProductTest.OrganisationProductId = organisationproduct.OrganisationProductId
-    INNER JOIN store ON SalesSummaryByProductTest.storeId = store.StoreId
+    FROM SalesSummaryByProduct
+    INNER JOIN producthierarchy ON SalesSummaryByProduct.HierarchyNodeId = producthierarchy.ProductHierarchyId
+    INNER JOIN organisationproduct ON SalesSummaryByProduct.OrganisationProductId = organisationproduct.OrganisationProductId
+    INNER JOIN store ON SalesSummaryByProduct.storeId = store.StoreId

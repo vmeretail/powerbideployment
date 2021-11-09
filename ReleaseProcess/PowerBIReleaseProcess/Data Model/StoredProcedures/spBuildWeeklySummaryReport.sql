@@ -10,7 +10,7 @@ AS
 		[AggregateId],
 		[StoreId],
 		[CompletedDate],
-		[subSectionId],
+		[HierarchyNodeId],
 		[OrganisationProductId],
 		[TaxRate],
 		[PaymentType],
@@ -31,7 +31,7 @@ AS
 		salestransactioncompleted.AggregateId,
 		StoreId,
 		completedDate,
-		subSectionId,
+		ISNULL(subSectionId, sectionId),
 		OrganisationProductId,
 		TaxRate,
 		PaymentType,
@@ -57,12 +57,13 @@ AS
 		GROUP BY aggregateId, storeProductId, promotionId
 	) salestransactionpromotioninformation ON salestransactionpromotioninformation.aggregateId = salestransactionline.aggregateId AND salestransactionpromotioninformation.storeProductId =salestransactionline.storeProductId
 	LEFT OUTER JOIN promotion ON salestransactionpromotioninformation.promotionId = promotion.PromotionId
-	WHERE (completedDate >= @startdate OR @startdate IS NULL) AND completedDate <= @enddate AND subSectionId IS NOT NULL
+	WHERE (completedDate >= @startdate OR @startdate IS NULL) AND completedDate <= @enddate AND ISNULL(subSectionId, sectionId) IS NOT NULL
 	GROUP BY
 		salestransactioncompleted.AggregateId,
 		StoreId,
 		completedDate,
 		subSectionId,
+		sectionId,
 		OrganisationProductId,
 		TaxRate,
 		PaymentType,
