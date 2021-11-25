@@ -55,58 +55,69 @@
         /// Defines the entry point of the application.
         /// </summary>
         /// <param name="args">The arguments.</param>
-        private static async Task Main(String[] args)
+        private static async Task<Int32> Main(String[] args)
         {
-            Program.LoadConfiguration();
-
-            if (args.Length != 3)
+            try
             {
-                //PrintErrorMessage("Invalid Args"); // TODO: Better message
-                return;
+                Program.LoadConfiguration();
+
+                if (args.Length != 3)
+                {
+                    //PrintErrorMessage("Invalid Args"); // TODO: Better message
+                    return -1;
+                }
+
+                Logger.Initialise(new LoggerFactory().AddNLog().CreateLogger("Logger"));
+
+                // Get the first argument (this is the release package location)
+                String releasePackageLocation = args[0];
+
+                // Get the second argument (this is the release package version)
+                String releaseVersion = args[1];
+
+                // Get the second argument (this is the customer)
+                ReleaseProfile releaseProfile = Program.GetReleaseProfile(args[2]);
+
+                DatabaseManager databaseManager = new DatabaseManager(releaseProfile.ConnectionString);
+
+                await databaseManager.RunScripts();
+
+                ITokenService tokenService = new TokenService();
+
+                Func<String, IPowerBIService> powerBiServiceResolver = (token) =>
+                {
+                    String powerBiApiUrl = Program.Configuration.GetSection("AppSettings:PowerBiApiUrl").Value;
+                    Int32 fileImportCheckRetryAttempts =
+                        Int32.Parse(Program.Configuration.GetSection("AppSettings:FileImportCheckRetryAttempts")
+                            .Value);
+                    Int32 fileImportCheckSleepIntervalInSeconds =
+                        Int32.Parse(Program.Configuration
+                            .GetSection("AppSettings:FileImportCheckSleepIntervalInSeconds").Value);
+
+                    return new PowerBIService(powerBiApiUrl,
+                        token,
+                        fileImportCheckRetryAttempts,
+                        fileImportCheckSleepIntervalInSeconds);
+                };
+                Func<IGitHubService> gitHubServiceResolver = () =>
+                {
+                    String gitHubApiUrl = Program.Configuration.GetSection("AppSettings:GitHubApiUrl").Value;
+                    String gitHubAccessToken = Program.Configuration.GetSection("AppSettings:GithubAccessToken").Value;
+
+                    return new GitHubService(gitHubApiUrl, gitHubAccessToken);
+                };
+                IPowerBiReleaseProcess releaseProcess =
+                    new PowerBiReleaseProcess(tokenService, powerBiServiceResolver, gitHubServiceResolver);
+
+                await releaseProcess.DeployRelease(releasePackageLocation, releaseVersion, releaseProfile,
+                    CancellationToken.None);
+
+                return 0;
             }
-
-            Logger.Initialise(new LoggerFactory().AddNLog().CreateLogger("Logger"));
-
-            // Get the first argument (this is the release package location)
-            String releasePackageLocation = args[0];
-
-            // Get the second argument (this is the release package version)
-            String releaseVersion = args[1];
-            
-            // Get the second argument (this is the customer)
-            ReleaseProfile releaseProfile = Program.GetReleaseProfile(args[2]);
-
-            DatabaseManager databaseManager = new DatabaseManager(releaseProfile.ConnectionString);
-
-            await databaseManager.RunScripts();
-
-            ITokenService tokenService = new TokenService();
-
-            Func<String, IPowerBIService> powerBiServiceResolver = (token) =>
-                                                                   {
-                                                                       String powerBiApiUrl = Program.Configuration.GetSection("AppSettings:PowerBiApiUrl").Value;
-                                                                       Int32 fileImportCheckRetryAttempts =
-                                                                           Int32.Parse(Program.Configuration.GetSection("AppSettings:FileImportCheckRetryAttempts")
-                                                                                              .Value);
-                                                                       Int32 fileImportCheckSleepIntervalInSeconds =
-                                                                           Int32.Parse(Program.Configuration
-                                                                                              .GetSection("AppSettings:FileImportCheckSleepIntervalInSeconds").Value);
-
-                                                                       return new PowerBIService(powerBiApiUrl,
-                                                                                                 token,
-                                                                                                 fileImportCheckRetryAttempts,
-                                                                                                 fileImportCheckSleepIntervalInSeconds);
-                                                                   };
-            Func<IGitHubService> gitHubServiceResolver = () =>
-                                                         {
-                                                             String gitHubApiUrl = Program.Configuration.GetSection("AppSettings:GitHubApiUrl").Value;
-                                                             String gitHubAccessToken = Program.Configuration.GetSection("AppSettings:GithubAccessToken").Value;
-
-                                                             return new GitHubService(gitHubApiUrl, gitHubAccessToken);
-                                                         };
-            IPowerBiReleaseProcess releaseProcess = new PowerBiReleaseProcess(tokenService, powerBiServiceResolver, gitHubServiceResolver);
-
-            await releaseProcess.DeployRelease(releasePackageLocation, releaseVersion, releaseProfile, CancellationToken.None);
+            catch (Exception ex)
+            {
+                return -1;
+            }
         }
         
         private static ReleaseProfile GetReleaseProfile(String organisationName)
