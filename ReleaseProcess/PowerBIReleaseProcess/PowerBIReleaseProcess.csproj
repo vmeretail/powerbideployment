@@ -121,6 +121,9 @@
 	  <None Update="Data Model\ReportingViews\Priority2\dbo.uvwOrderDetailsReporting.View.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Data Model\StoredProcedures\spRunCashRecReportSP.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Data Model\StoredProcedures\spBuildDepartmentCashRecReport.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

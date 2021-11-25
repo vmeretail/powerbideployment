@@ -1,11 +1,5 @@
 CREATE OR ALTER   PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime, @DepartmentId uniqueidentifier
 AS
-	select salestransactionline.aggregateId, salestransactionline.departmentId
-	into #salesInReportDate
-	from salestransactionline
-	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = salestransactionline.aggregateId
-	where salestransactioncompleted.CompletedDate >= @reportStartDate
-
 	delete from CashRecReporting WHERE ReportDate >= @reportStartDate and DepartmentId = @DepartmentId
 
 	select 'Total Sales'  as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, count(distinct salestransactioncompleted.aggregateId) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
@@ -14,7 +8,7 @@ AS
 	from 
 	(	
 		select distinct aggregateId
-		from #salesInReportDate
+		from ##salesInReportDate
 	) as result
 	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
 	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId
@@ -27,8 +21,8 @@ AS
 	(
 		select distinct salestransactionline.aggregateId 
 		from salestransactionline
-		where salestransactionline.aggregateId IN (select distinct #salesInReportDate.aggregateId
-		from #salesInReportDate
+		where salestransactionline.aggregateId IN (select distinct ##salesInReportDate.aggregateId
+		from ##salesInReportDate
 		where departmentId = @departmentid)	
 		group by salestransactionline.aggregateId
 		having count(distinct salestransactionline.departmentId) = 1
@@ -44,15 +38,15 @@ AS
 	(
 		select distinct salestransactionline.aggregateId 
 		from salestransactionline
-		where salestransactionline.aggregateId IN (select distinct #salesInReportDate.aggregateId
-		from #salesInReportDate
+		where salestransactionline.aggregateId IN (select distinct ##salesInReportDate.aggregateId
+		from ##salesInReportDate
 		where departmentId = @departmentid)	
 		group by salestransactionline.aggregateId
 		having count(distinct salestransactionline.departmentId) > 1
 	) as result
 	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
 	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId
-
+	
 	select 'Sales with nothing from department' as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId,count(*) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
 	sum(salestransactioncompleted.MarginValue) as marginTotal
 	into #saleswithoutselecteddepartment
@@ -60,14 +54,14 @@ AS
 	(
 		select distinct salestransactionline.aggregateId 
 		from salestransactionline
-		inner join #salesInReportDate on #salesInReportDate.aggregateId = salestransactionline.aggregateId
-		where salestransactionline.aggregateId NOT IN (select distinct #salesInReportDate.aggregateId
-		from #salesInReportDate
+		inner join ##salesInReportDate on ##salesInReportDate.aggregateId = salestransactionline.aggregateId
+		where salestransactionline.aggregateId NOT IN (select distinct ##salesInReportDate.aggregateId
+		from ##salesInReportDate
 		where departmentId = @departmentid)
 	) as result
 	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
 	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId	
-
+	
 	insert into CashRecReporting(
 		ReportDate, 
 		DepartmentId, 
@@ -79,7 +73,7 @@ AS
 		marginTotal)
 
 	select 		
-
+	
 		#totalsales.CompletedDate as ReportDate,  
 		@DepartmentId as DepartmentId, 
 		#totalsales.StoreId,
@@ -100,7 +94,7 @@ AS
 		marginTotal
 	)
 	select 		
-
+	
 		#saleswithonlyselecteddepartment.CompletedDate as ReportDate,   
 		@DepartmentId as DepartmentId, 
 		#saleswithonlyselecteddepartment.StoreId,
@@ -121,7 +115,7 @@ AS
 		marginTotal
 	)
 	select 		
-
+	
 		#saleswithselecteddepartmentandothers.CompletedDate as ReportDate,  
 		@DepartmentId as DepartmentId, 
 		#saleswithselecteddepartmentandothers.StoreId,
@@ -131,7 +125,7 @@ AS
 		#saleswithselecteddepartmentandothers.marginTotal
 	from #saleswithselecteddepartmentandothers
 
-
+	
 	insert into CashRecReporting(
 		ReportDate, 
 		Departmentid, 
@@ -143,7 +137,7 @@ AS
 		marginTotal
 	)
 	select 		
-
+	
 		#saleswithoutselecteddepartment.CompletedDate as ReportDate,   
 		@DepartmentId as DepartmentId, 
 		#saleswithoutselecteddepartment.StoreId,
