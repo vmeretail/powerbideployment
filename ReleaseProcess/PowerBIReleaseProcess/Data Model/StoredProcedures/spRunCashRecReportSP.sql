@@ -23,9 +23,10 @@ OPEN db_cursor
 FETCH NEXT FROM db_cursor INTO @DepartmentId  
 
 WHILE @@FETCH_STATUS = 0  
-BEGIN  
-      FETCH NEXT FROM db_cursor INTO @DepartmentId 
-	  EXEC [dbo].[spBuildDepartmentCashRecReport] @reportStartDate, @DepartmentId
+BEGIN 
+	EXEC [dbo].[spBuildDepartmentCashRecReport] @reportStartDate, @DepartmentId
+    
+	FETCH NEXT FROM db_cursor INTO @DepartmentId	  
 END 
 
 CLOSE db_cursor

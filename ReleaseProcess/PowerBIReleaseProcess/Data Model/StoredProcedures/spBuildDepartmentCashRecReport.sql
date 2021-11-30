@@ -2,9 +2,17 @@ CREATE OR ALTER   PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartD
 AS
 	delete from CashRecReporting WHERE ReportDate >= @reportStartDate and DepartmentId = @DepartmentId
 
-	select 'Total Sales'  as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, count(distinct salestransactioncompleted.aggregateId) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
-	sum(salestransactioncompleted.MarginValue) as marginTotal
-	into #totalsales
+	insert into CashRecReporting(
+		ReportDate, 
+		StoreId,
+		DepartmentId, 
+		basketCount,
+		basketTotal,
+		saleType,
+		marginTotal)
+
+	-- total sales
+	select salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, @DepartmentId, count(distinct salestransactioncompleted.aggregateId), sum(salestransactioncompleted.baskettotal), 'total', sum(salestransactioncompleted.MarginValue)
 	from 
 	(	
 		select distinct aggregateId
@@ -13,10 +21,10 @@ AS
 	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
 	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId
 
+	union all 
+
 	-- sales with only the interesting department
-	select 'Sales with only department' as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, count(*) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
-	sum(salestransactioncompleted.MarginValue) as marginTotal
-	into #saleswithonlyselecteddepartment
+	select salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, @DepartmentId, count(*), sum(salestransactioncompleted.baskettotal), 'onlyselecteddepartment', sum(salestransactioncompleted.MarginValue)
 	from 
 	(
 		select distinct salestransactionline.aggregateId 
@@ -30,10 +38,10 @@ AS
 	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
 	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId		
 
+	union all
+
 	-- sales with the interesting department but others
-	select 'Sales with department and other stuff' as description,salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, count(*) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal, 
-	sum(salestransactioncompleted.MarginValue) as marginTotal
-	into #saleswithselecteddepartmentandothers
+	select salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, @DepartmentId, count(*), sum(salestransactioncompleted.baskettotal), 'includingselecteddepartment', sum(salestransactioncompleted.MarginValue)
 	from 
 	(
 		select distinct salestransactionline.aggregateId 
@@ -47,9 +55,9 @@ AS
 	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
 	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId
 	
-	select 'Sales with nothing from department' as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId,count(*) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
-	sum(salestransactioncompleted.MarginValue) as marginTotal
-	into #saleswithoutselecteddepartment
+	union all
+
+	select salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, @DepartmentId, count(*), sum(salestransactioncompleted.baskettotal), 'excludingselecteddepartment', sum(salestransactioncompleted.MarginValue)
 	from 
 	(
 		select distinct salestransactionline.aggregateId 
@@ -60,89 +68,4 @@ AS
 		where departmentId = @departmentid)
 	) as result
 	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
-	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId	
-	
-	insert into CashRecReporting(
-		ReportDate, 
-		DepartmentId, 
-		StoreId,
-
-		basketCount,
-		basketTotal,
-		saleType,
-		marginTotal)
-
-	select 		
-	
-		#totalsales.CompletedDate as ReportDate,  
-		@DepartmentId as DepartmentId, 
-		#totalsales.StoreId,
-		#totalsales.basketCount,
-		#totalsales.basketTotal,
-		'total' as saleType,
-		#totalsales.marginTotal
-	from #totalsales
-
-	insert into CashRecReporting(
-		ReportDate, 
-		Departmentid, 
-		StoreId, 
-
-		basketCount,
-		basketTotal,
-		saleType,
-		marginTotal
-	)
-	select 		
-	
-		#saleswithonlyselecteddepartment.CompletedDate as ReportDate,   
-		@DepartmentId as DepartmentId, 
-		#saleswithonlyselecteddepartment.StoreId,
-		#saleswithonlyselecteddepartment.basketCount,
-		#saleswithonlyselecteddepartment.basketTotal,
-		'onlyselecteddepartment',
-		#saleswithonlyselecteddepartment.marginTotal
-	from #saleswithonlyselecteddepartment
-
-	insert into CashRecReporting(
-		ReportDate, 
-		Departmentid, 
-		StoreId, 
-
-		basketCount,
-		basketTotal,
-		saleType,
-		marginTotal
-	)
-	select 		
-	
-		#saleswithselecteddepartmentandothers.CompletedDate as ReportDate,  
-		@DepartmentId as DepartmentId, 
-		#saleswithselecteddepartmentandothers.StoreId,
-		#saleswithselecteddepartmentandothers.basketCount,
-		#saleswithselecteddepartmentandothers.basketTotal,
-		'includingselecteddepartment',
-		#saleswithselecteddepartmentandothers.marginTotal
-	from #saleswithselecteddepartmentandothers
-
-	
-	insert into CashRecReporting(
-		ReportDate, 
-		Departmentid, 
-		StoreId, 
-
-		basketCount,
-		basketTotal,
-		saleType,
-		marginTotal
-	)
-	select 		
-	
-		#saleswithoutselecteddepartment.CompletedDate as ReportDate,   
-		@DepartmentId as DepartmentId, 
-		#saleswithoutselecteddepartment.StoreId,
-		#saleswithoutselecteddepartment.basketCount,
-		#saleswithoutselecteddepartment.basketTotal,
-		'excludingselecteddepartment',
-		#saleswithoutselecteddepartment.marginTotal
-	from #saleswithoutselecteddepartment
+	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId
