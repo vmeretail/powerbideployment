@@ -1,154 +1,153 @@
-CREATE OR ALTER   PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime, @DepartmentId uniqueidentifier
+CREATE OR ALTER   PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime
 AS
-	select salestransactionline.aggregateId, salestransactionline.departmentId
-	into #salesInReportDate
-	from salestransactionline
-	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = salestransactionline.aggregateId
-	where salestransactioncompleted.CompletedDate >= @reportStartDate
+	DELETE FROM CashRecReporting WHERE ReportDate >= @reportStartDate
 
-	delete from CashRecReporting WHERE ReportDate >= @reportStartDate and DepartmentId = @DepartmentId
-
-	select 'Total Sales'  as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, count(distinct salestransactioncompleted.aggregateId) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
-	sum(salestransactioncompleted.MarginValue) as marginTotal
-	into #totalsales
-	from 
-	(	
-		select distinct aggregateId
-		from #salesInReportDate
-	) as result
-	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
-	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId
-
-	-- sales with only the interesting department
-	select 'Sales with only department' as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, count(*) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
-	sum(salestransactioncompleted.MarginValue) as marginTotal
-	into #saleswithonlyselecteddepartment
-	from 
+	INSERT INTO CashRecReporting
 	(
-		select distinct salestransactionline.aggregateId 
-		from salestransactionline
-		where salestransactionline.aggregateId IN (select distinct #salesInReportDate.aggregateId
-		from #salesInReportDate
-		where departmentId = @departmentid)	
-		group by salestransactionline.aggregateId
-		having count(distinct salestransactionline.departmentId) = 1
-	) as result
-	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
-	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId		
-
-	-- sales with the interesting department but others
-	select 'Sales with department and other stuff' as description,salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, count(*) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal, 
-	sum(salestransactioncompleted.MarginValue) as marginTotal
-	into #saleswithselecteddepartmentandothers
-	from 
-	(
-		select distinct salestransactionline.aggregateId 
-		from salestransactionline
-		where salestransactionline.aggregateId IN (select distinct #salesInReportDate.aggregateId
-		from #salesInReportDate
-		where departmentId = @departmentid)	
-		group by salestransactionline.aggregateId
-		having count(distinct salestransactionline.departmentId) > 1
-	) as result
-	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
-	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId
-
-	select 'Sales with nothing from department' as description, salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId,count(*) as basketCount, sum(salestransactioncompleted.baskettotal) as basketTotal,
-	sum(salestransactioncompleted.MarginValue) as marginTotal
-	into #saleswithoutselecteddepartment
-	from 
-	(
-		select distinct salestransactionline.aggregateId 
-		from salestransactionline
-		inner join #salesInReportDate on #salesInReportDate.aggregateId = salestransactionline.aggregateId
-		where salestransactionline.aggregateId NOT IN (select distinct #salesInReportDate.aggregateId
-		from #salesInReportDate
-		where departmentId = @departmentid)
-	) as result
-	inner join salestransactioncompleted on salestransactioncompleted.AggregateId = result.AggregateId
-	group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId	
-
-	insert into CashRecReporting(
 		ReportDate, 
 		DepartmentId, 
 		StoreId,
-
-		basketCount,
-		basketTotal,
-		saleType,
-		marginTotal)
-
-	select 		
-
-		#totalsales.CompletedDate as ReportDate,  
-		@DepartmentId as DepartmentId, 
-		#totalsales.StoreId,
-		#totalsales.basketCount,
-		#totalsales.basketTotal,
-		'total' as saleType,
-		#totalsales.marginTotal
-	from #totalsales
-
-	insert into CashRecReporting(
-		ReportDate, 
-		Departmentid, 
-		StoreId, 
-
 		basketCount,
 		basketTotal,
 		saleType,
 		marginTotal
 	)
-	select 		
 
-		#saleswithonlyselecteddepartment.CompletedDate as ReportDate,   
-		@DepartmentId as DepartmentId, 
-		#saleswithonlyselecteddepartment.StoreId,
-		#saleswithonlyselecteddepartment.basketCount,
-		#saleswithonlyselecteddepartment.basketTotal,
-		'onlyselecteddepartment',
-		#saleswithonlyselecteddepartment.marginTotal
-	from #saleswithonlyselecteddepartment
+	-- total sales
+	SELECT 
+		salestransactioncompleted.CompletedDate, 
+		departmentId, 
+		salestransactioncompleted.StoreId, 
+		COUNT(DISTINCT salestransactioncompleted.aggregateId), 
+		SUM(salestransactioncompleted.baskettotal), 
+		'total', 
+		SUM(salestransactioncompleted.MarginValue)
+	FROM 
+	(
+		SELECT DISTINCT departmentId from producthierarchy
+	) department
+	INNER JOIN salestransactioncompleted On 1 = 1
+	WHERE salestransactioncompleted.CompletedDate >= @reportStartDate
+	GROUP BY salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, departmentId
 
-	insert into CashRecReporting(
-		ReportDate, 
-		Departmentid, 
-		StoreId, 
+	UNION ALL
 
-		basketCount,
-		basketTotal,
-		saleType,
-		marginTotal
-	)
-	select 		
+	-- sales with only the interesting department
+	SELECT 
+		salestransactioncompleted.CompletedDate, 
+		departmentId, 
+		salestransactioncompleted.StoreId, 
+		count(*), 
+		SUM(salestransactioncompleted.baskettotal), 
+		'onlyselecteddepartment', 
+		SUM(salestransactioncompleted.MarginValue)
+	FROM salestransactioncompleted
+	INNER JOIN
+	(
+		SELECT DISTINCT a.aggregateId, departmentId 
+		FROM 
+		(
+			SELECT aggregateId 
+			FROM salestransactionline
+			GROUP BY aggregateId
+			HAVING COUNT(DISTINCT departmentId) = 1
+		) a
+		INNER JOIN  
+		(
+			SELECT aggregateId, departmentId
+			FROM salestransactionline
+		) b ON a.AggregateId = b.AggregateId
+	) result ON salestransactioncompleted.AggregateId = result.AggregateId
+	WHERE salestransactioncompleted.CompletedDate >= @reportStartDate AND departmentId IS NOT NULL
+	GROUP BY salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, departmentId
 
-		#saleswithselecteddepartmentandothers.CompletedDate as ReportDate,  
-		@DepartmentId as DepartmentId, 
-		#saleswithselecteddepartmentandothers.StoreId,
-		#saleswithselecteddepartmentandothers.basketCount,
-		#saleswithselecteddepartmentandothers.basketTotal,
-		'includingselecteddepartment',
-		#saleswithselecteddepartmentandothers.marginTotal
-	from #saleswithselecteddepartmentandothers
+	UNION ALL
 
+	-- sales with the interesting department but others
+	SELECT 
+		salestransactioncompleted.CompletedDate, 
+		departmentId, 
+		salestransactioncompleted.StoreId, 
+		count(*), 
+		SUM(salestransactioncompleted.baskettotal), 
+		'includingselecteddepartment', 
+		SUM(salestransactioncompleted.MarginValue)
+	FROM salestransactioncompleted
+	INNER JOIN
+	(
+		SELECT DISTINCT a.aggregateId, departmentId 
+		FROM 
+		(
+			SELECT aggregateId 
+			FROM salestransactionline
+			GROUP BY aggregateId
+			HAVING COUNT(DISTINCT departmentId) > 1
+		) a
+		INNER JOIN  
+		(
+			SELECT aggregateId, departmentId
+			FROM salestransactionline
+		) b ON a.AggregateId = b.AggregateId
+	) result ON salestransactioncompleted.AggregateId = result.AggregateId
+	WHERE salestransactioncompleted.CompletedDate >= @reportStartDate AND departmentId IS NOT NULL
+	GROUP BY salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, departmentId
 
-	insert into CashRecReporting(
-		ReportDate, 
-		Departmentid, 
-		StoreId, 
+	DECLARE @DepartmentId UNIQUEIDENTIFIER  
+	DECLARE db_cursor CURSOR FOR 
+		SELECT DISTINCT [DepartmentId]
+		FROM [dbo].[producthierarchy]
 
-		basketCount,
-		basketTotal,
-		saleType,
-		marginTotal
-	)
-	select 		
+	BEGIN TRY
+		DROP TABLE ##salesInReportDate
+	END TRY
+	BEGIN CATCH
+	  --IGNORE EXCEPTION IF TABLE DOES NOT EXIST
+	END CATCH
+	
+	SELECT salestransactionline.aggregateId, salestransactionline.departmentId
+	INTO ##salesInReportDate
+	FROM salestransactionline
+	INNER JOIN salestransactioncompleted ON salestransactioncompleted.AggregateId = salestransactionline.aggregateId
+	WHERE salestransactioncompleted.CompletedDate >= @reportStartDate
 
-		#saleswithoutselecteddepartment.CompletedDate as ReportDate,   
-		@DepartmentId as DepartmentId, 
-		#saleswithoutselecteddepartment.StoreId,
-		#saleswithoutselecteddepartment.basketCount,
-		#saleswithoutselecteddepartment.basketTotal,
-		'excludingselecteddepartment',
-		#saleswithoutselecteddepartment.marginTotal
-	from #saleswithoutselecteddepartment
+	OPEN db_cursor  
+	FETCH NEXT FROM db_cursor INTO @DepartmentId  
+
+	WHILE @@FETCH_STATUS = 0  
+	BEGIN 
+		INSERT INTO CashRecReporting
+		(
+			ReportDate, 
+			DepartmentId, 
+			StoreId,
+			basketCount,
+			basketTotal,
+			saleType,
+			marginTotal
+		)
+
+		SELECT 
+			salestransactioncompleted.CompletedDate, 
+			@DepartmentId, 
+			salestransactioncompleted.StoreId, 
+			COUNT(*), 
+			SUM(salestransactioncompleted.baskettotal), 
+			'excludingselecteddepartment', 
+			SUM(salestransactioncompleted.MarginValue)
+		FROM 
+		(
+			SELECT DISTINCT salestransactionline.aggregateId 
+			FROM salestransactionline
+			INNER JOIN ##salesInReportDate on ##salesInReportDate.aggregateId = salestransactionline.aggregateId
+			WHERE salestransactionline.aggregateId NOT IN (SELECT DISTINCT ##salesInReportDate.aggregateId
+			FROM ##salesInReportDate
+			WHERE departmentId = @DepartmentId)
+		) AS result
+		INNER JOIN salestransactioncompleted ON salestransactioncompleted.AggregateId = result.AggregateId
+		group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId	
+    
+		FETCH NEXT FROM db_cursor INTO @DepartmentId	  
+	END 
+
+	CLOSE db_cursor
+	DEALLOCATE db_cursor
