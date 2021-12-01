@@ -1,8 +1,8 @@
-CREATE OR ALTER   PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime, @DepartmentId uniqueidentifier
+CREATE OR ALTER   PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime
 AS
-	DELETE FROM CashRecReportingTEST WHERE ReportDate >= @reportStartDate
+	DELETE FROM CashRecReporting WHERE ReportDate >= @reportStartDate
 
-	INSERT INTO CashRecReportingTEST
+	INSERT INTO CashRecReporting
 	(
 		ReportDate, 
 		DepartmentId, 
@@ -115,7 +115,7 @@ AS
 
 	WHILE @@FETCH_STATUS = 0  
 	BEGIN 
-		INSERT INTO CashRecReportingTEST
+		INSERT INTO CashRecReporting
 		(
 			ReportDate, 
 			DepartmentId, 
