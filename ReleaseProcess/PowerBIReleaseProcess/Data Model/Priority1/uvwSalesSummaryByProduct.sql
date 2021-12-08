@@ -22,7 +22,7 @@ AS
         ,[Week]
         ,[DayOfWeekShort]
         ,[DayOfWeek]
-	    ,store.[Name] [store] 
+	    ,store.[Name] [Store] 
     FROM SalesSummaryByProduct
     INNER JOIN producthierarchy ON SalesSummaryByProduct.HierarchyNodeId = producthierarchy.ProductHierarchyId
     INNER JOIN organisationproduct ON SalesSummaryByProduct.OrganisationProductId = organisationproduct.OrganisationProductId
