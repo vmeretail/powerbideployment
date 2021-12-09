@@ -30,7 +30,7 @@
 
         #endregion
 
-        #region Methodss
+        #region Methods
 
         public async Task RunScripts()
         {
