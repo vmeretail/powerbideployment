@@ -28,6 +28,7 @@ AS
 		INNER JOIN [order] o ON oc.OrderNumber = o.ExternalOrderId
 		INNER JOIN store s ON o.StoreId = s.StoreId AND CONVERT(INT, oc.StoreNumber) = CONVERT(INT, s.ExternalStoreNumber)
 	) oc ON CONVERT(DATE, os.[Date]) = CONVERT(DATE, oc.[Date]) AND CONVERT(INT, os.StoreNumber) = CONVERT(INT, oc.StoreNumber) AND os.SupplierName = oc.ExternalSupplierId 
+	WHERE os.Date < GETDATE()
 	GROUP BY
 		os.[Date],
 		oc.OrderNumber,
