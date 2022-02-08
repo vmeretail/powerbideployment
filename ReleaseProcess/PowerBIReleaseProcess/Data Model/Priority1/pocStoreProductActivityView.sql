@@ -3,6 +3,7 @@ AS
 select
 ActivityDate,
 ActivityDateTime, 
+calendar.YearWeekNumber,
 storeproduct.CurrentStockLevel,
 StockTransferQuantity, 
 IsDelivery = CASE WHEN storeproductactivity.IsDelivery = 1 OR storeproductactivity.ReasonDescription = 'DELIVERY' THEN 1 ELSE 0 END,
@@ -18,6 +19,7 @@ IsOrder,
 --OrderCount = CASE WHEN storeproductactivity.IsOrder = 1 THEN StockTransferQuantity ELSE 0 END,
 IsRTC,
 RTCCount = CASE WHEN storeproductactivity.IsRTC = 1 THEN (StockTransferQuantity * -1) + NumberOfItemsSold ELSE 0 END,
+RTCSales = CASE WHEN storeproductactivity.IsRTC = 1 THEN ((StockTransferQuantity * -1) + NumberOfItemsSold) * priceState.Price ELSE 0 END,
 IsSale = CASE WHEN storeproductactivity.IsSale = 1 THEN 1 ELSE 0 END,
 SaleCount = CASE WHEN storeproductactivity.IsSale = 1 THEN (StockTransferQuantity * -1) + NumberOfItemsSold ELSE 0 END,
 IsStockCheck,
@@ -26,6 +28,7 @@ IsStockTake,
 StockTakeCount = CASE WHEN storeproductactivity.IsStockTake = 1 THEN StockTransferQuantity ELSE 0 END,
 IsWastage,
 WastageCount = CASE WHEN storeproductactivity.IsWastage = 1 THEN StockTransferQuantity * -1 ELSE 0 END,
+WastageSales = CASE WHEN storeproductactivity.IsWastage = 1 THEN (StockTransferQuantity * priceState.Price) * -1 ELSE 0 END,
 [IsStockTransfer]	= CASE WHEN storeproductactivity.IsGap = 1 OR storeproductactivity.IsIBTIn = 1 OR storeproductactivity.IsIBTOut = 1 OR storeproductactivity.IsStockCheck = 1 OR
 													  storeproductactivity.IsWastage = 1 OR storeproductactivity.isStocktransferSale = 1 OR
 													  storeproductactivity.ReasonDescription = 'DELIVERY' THEN 1 ELSE 0 END,
@@ -55,7 +58,9 @@ CASE
 END as [ActivityTypeExtra],
 ReasonDescription
 from storeproductactivity 
+inner join calendar on calendar.Date = StoreProductActivity.ActivityDate
 inner join StoreProductStateProjection storeproduct on storeproduct.StoreProductReportingId = storeproductactivity.StoreProductReportingId
 inner join StoreProjectionState store on store.StoreReportingId = storeproduct.StoreReportingId
 inner join OrganisationProductProjectionState organisationproduct on organisationproduct.OrganisationProductReportingId = storeproduct.OrganisationProductReportingId
+inner join OrganisationProductPriceProjectionState priceState on priceState.OrganisationProductReportingId = organisationproduct.OrganisationProductReportingId and priceState.Band = store.PriceBand
 where (CAST(IsDelivery as INT) + CAST(IsGap as INT) + CAST(IsIBTIn as INT)+ CAST(IsIBTOut as INT)+ CAST(IsOrder as INT)+ CAST(IsRTC as INT)+ CAST(IsSale as INT)+ CAST(IsWastage as INT)) > 0
