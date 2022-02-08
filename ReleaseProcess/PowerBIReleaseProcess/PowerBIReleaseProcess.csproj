@@ -67,9 +67,6 @@
 	  <None Update="Data Model\Priority1\uvwSalesSummaryByProduct.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
-	  <None Update="Data Model\Priority2\dbo.uvwNearStreetData.View.sql">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
 	  <None Update="Data Model\Priority2\pocCashRecReportDetails.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
