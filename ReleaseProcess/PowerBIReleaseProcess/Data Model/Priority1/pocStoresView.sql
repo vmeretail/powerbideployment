@@ -10,7 +10,7 @@ SELECT
 	LastOrder,
 	LastSale,
 	PriceBand,
-	StoreReportingId,
+	StoreProjectionState.StoreReportingId,
 	areamanagerstore.AreaManagerId
 FROM StoreProjectionState
 LEFT OUTER join areamanagerstore on areamanagerstore.StoreReportingId = StoreProjectionState.StoreReportingId
