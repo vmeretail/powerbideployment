@@ -146,7 +146,7 @@ namespace PowerBiReleaseProcess.DatabaseTests
                                                                   .UseNetwork(sharedNetworkService)
                                                                   .WithName($"querymodel")
                                                                   .WithEnvironment("AppSettings:UseConnectionStringConfig=false",
-                                                                                   "AppSettings:UseInternalSubscriptionService=false",
+                                                                                   "AppSettings:InternalSubscriptionService=false",
                                                                                    connString,
                                                                                    "urls=http://0.0.0.0:5023").WaitForPort($"{DockerHelper.QueryModelWriterDockerPort}/tcp", 30000 /*30s*/)
                                                                   .Mount(logFileMountDirectory, containerTraceDir, MountType.ReadWrite)
