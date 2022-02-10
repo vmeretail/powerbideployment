@@ -22,6 +22,7 @@ RTCCount = CASE WHEN storeproductactivity.IsRTC = 1 THEN (StockTransferQuantity 
 RTCSales = CASE WHEN storeproductactivity.IsRTC = 1 THEN ((StockTransferQuantity * -1) + NumberOfItemsSold) * priceState.Price ELSE 0 END,
 IsSale = CASE WHEN storeproductactivity.IsSale = 1 THEN 1 ELSE 0 END,
 SaleCount = CASE WHEN storeproductactivity.IsSale = 1 THEN (StockTransferQuantity * -1) + NumberOfItemsSold ELSE 0 END,
+Sales = CASE WHEN storeproductactivity.IsSale = 1 THEN ((StockTransferQuantity * -1) + NumberOfItemsSold) * priceState.Price ELSE 0 END,
 IsStockCheck,
 StockCheckCount = CASE WHEN storeproductactivity.IsStockCheck = 1 THEN StockTransferQuantity ELSE 0 END,
 IsStockTake,
