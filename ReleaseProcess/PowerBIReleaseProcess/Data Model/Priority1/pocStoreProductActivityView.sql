@@ -3,6 +3,8 @@ AS
 select
 ActivityDate,
 ActivityDateTime, 
+calendar.DayOfWeek,
+calendar.DayOfWeekNumber,
 calendar.YearWeekNumber,
 storeproduct.CurrentStockLevel,
 StockTransferQuantity, 
