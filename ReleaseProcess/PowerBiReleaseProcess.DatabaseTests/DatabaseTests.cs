@@ -94,7 +94,7 @@ namespace PowerBiReleaseProcess.DatabaseTests
 
             if (response.IsSuccessStatusCode == false)
             {
-                throw new Exception("Error prosing Organsation Created Event to query rest");
+                throw new Exception("Error posting Organsation Created Event to query rest");
             }
 
             ShouldlyConfiguration.DefaultTaskTimeout = TimeSpan.FromMinutes(5);
