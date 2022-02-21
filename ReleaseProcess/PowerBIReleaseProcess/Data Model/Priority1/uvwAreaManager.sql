@@ -7,5 +7,5 @@ from areamanager
 
 union all
 
-select NULL,'None'
+select NULL,'<None>'
 
