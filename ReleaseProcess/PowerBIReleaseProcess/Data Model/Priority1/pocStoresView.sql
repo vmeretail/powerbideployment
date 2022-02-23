@@ -11,7 +11,7 @@ SELECT
 	LastSale,
 	PriceBand,
 	StoreProjectionState.StoreReportingId,
-	areamanagerstore.AreaManagerId
-FROM StoreProjectionState
+	ISNULL(areamanagerstore.AreaManagerId,0) as AreaManagerId
+FROM StoreProjectionState WITH(NOLOCK)
 LEFT OUTER join areamanagerstore on areamanagerstore.StoreReportingId = StoreProjectionState.StoreReportingId
 WHERE StoreStatus = 2
