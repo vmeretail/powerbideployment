@@ -2,6 +2,9 @@ CREATE OR ALTER   PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartD
 AS
 	DELETE FROM CashRecReporting WHERE ReportDate >= @reportStartDate
 
+		-- total sales
+	SELECT DISTINCT departmentId INTO #department from producthierarchy WITH(nolock)
+
 	INSERT INTO CashRecReporting
 	(
 		ReportDate, 
@@ -12,23 +15,17 @@ AS
 		saleType,
 		marginTotal
 	)
-
-	-- total sales
-	SELECT 
-		salestransactioncompleted.CompletedDate, 
-		departmentId, 
-		salestransactioncompleted.StoreId, 
-		COUNT(DISTINCT salestransactioncompleted.aggregateId), 
-		SUM(salestransactioncompleted.baskettotal), 
-		'total', 
-		SUM(salestransactioncompleted.MarginValue)
-	FROM 
-	(
-		SELECT DISTINCT departmentId from producthierarchy
-	) department
-	INNER JOIN salestransactioncompleted On 1 = 1
-	WHERE salestransactioncompleted.CompletedDate >= @reportStartDate
-	GROUP BY salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, departmentId
+	select 	salestransactioncompleted.CompletedDate,
+			#department.DepartmentId,
+			salestransactioncompleted.StoreId, 
+			COUNT(DISTINCT salestransactioncompleted.aggregateId), 
+			SUM(salestransactioncompleted.baskettotal), 
+			'total', 
+			SUM(salestransactioncompleted.MarginValue) 
+	from salestransactioncompleted WITH(nolock)
+	CROSS JOIN #department
+	WHERE salestransactioncompleted.CompletedDate = @reportStartDate
+	group by CompletedDate, storeid,#department.DepartmentId
 
 	UNION ALL
 
@@ -41,7 +38,7 @@ AS
 		SUM(salestransactioncompleted.baskettotal), 
 		'onlyselecteddepartment', 
 		SUM(salestransactioncompleted.MarginValue)
-	FROM salestransactioncompleted
+	FROM salestransactioncompleted WITH(nolock)
 	INNER JOIN
 	(
 		SELECT DISTINCT a.aggregateId, departmentId 
@@ -58,7 +55,7 @@ AS
 			FROM salestransactionline
 		) b ON a.AggregateId = b.AggregateId
 	) result ON salestransactioncompleted.AggregateId = result.AggregateId
-	WHERE salestransactioncompleted.CompletedDate >= @reportStartDate AND departmentId IS NOT NULL
+	WHERE salestransactioncompleted.CompletedDate = @reportStartDate AND departmentId IS NOT NULL
 	GROUP BY salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, departmentId
 
 	UNION ALL
@@ -72,8 +69,8 @@ AS
 		SUM(salestransactioncompleted.baskettotal), 
 		'includingselecteddepartment', 
 		SUM(salestransactioncompleted.MarginValue)
-	FROM salestransactioncompleted
-	INNER JOIN
+	FROM salestransactioncompleted WITH(nolock)
+	INNER JOIN 
 	(
 		SELECT DISTINCT a.aggregateId, departmentId 
 		FROM 
@@ -89,26 +86,19 @@ AS
 			FROM salestransactionline
 		) b ON a.AggregateId = b.AggregateId
 	) result ON salestransactioncompleted.AggregateId = result.AggregateId
-	WHERE salestransactioncompleted.CompletedDate >= @reportStartDate AND departmentId IS NOT NULL
+	WHERE salestransactioncompleted.CompletedDate = @reportStartDate AND departmentId IS NOT NULL
 	GROUP BY salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, departmentId
 
 	DECLARE @DepartmentId UNIQUEIDENTIFIER  
 	DECLARE db_cursor CURSOR FOR 
 		SELECT DISTINCT [DepartmentId]
 		FROM [dbo].[producthierarchy]
-
-	BEGIN TRY
-		DROP TABLE ##salesInReportDate
-	END TRY
-	BEGIN CATCH
-	  --IGNORE EXCEPTION IF TABLE DOES NOT EXIST
-	END CATCH
 	
 	SELECT salestransactionline.aggregateId, salestransactionline.departmentId
-	INTO ##salesInReportDate
-	FROM salestransactionline
-	INNER JOIN salestransactioncompleted ON salestransactioncompleted.AggregateId = salestransactionline.aggregateId
-	WHERE salestransactioncompleted.CompletedDate >= @reportStartDate
+	INTO #salesInReportDate
+	FROM salestransactionline WITH(nolock)
+	INNER JOIN salestransactioncompleted WITH(nolock) ON salestransactioncompleted.AggregateId = salestransactionline.aggregateId
+	WHERE salestransactioncompleted.CompletedDate = @reportStartDate
 
 	OPEN db_cursor  
 	FETCH NEXT FROM db_cursor INTO @DepartmentId  
@@ -137,13 +127,13 @@ AS
 		FROM 
 		(
 			SELECT DISTINCT salestransactionline.aggregateId 
-			FROM salestransactionline
-			INNER JOIN ##salesInReportDate on ##salesInReportDate.aggregateId = salestransactionline.aggregateId
-			WHERE salestransactionline.aggregateId NOT IN (SELECT DISTINCT ##salesInReportDate.aggregateId
-			FROM ##salesInReportDate
+			FROM salestransactionline WITH(nolock)
+			INNER JOIN #salesInReportDate on #salesInReportDate.aggregateId = salestransactionline.aggregateId
+			WHERE salestransactionline.aggregateId NOT IN (SELECT DISTINCT #salesInReportDate.aggregateId
+			FROM #salesInReportDate
 			WHERE departmentId = @DepartmentId)
 		) AS result
-		INNER JOIN salestransactioncompleted ON salestransactioncompleted.AggregateId = result.AggregateId
+		INNER JOIN salestransactioncompleted WITH(nolock) ON salestransactioncompleted.AggregateId = result.AggregateId
 		group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId	
     
 		FETCH NEXT FROM db_cursor INTO @DepartmentId	  

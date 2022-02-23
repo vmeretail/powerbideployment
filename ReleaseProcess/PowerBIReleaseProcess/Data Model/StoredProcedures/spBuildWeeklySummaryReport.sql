@@ -47,16 +47,16 @@ AS
 		WeekNumber,
 		DayOfWeekShort,
 		DayOfWeekNumber
-	FROM salestransactioncompleted
-	INNER JOIN salestransactionline ON salestransactioncompleted.AggregateId = salestransactionline.AggregateId
+	FROM salestransactioncompleted WITH(nolock)
+	INNER JOIN salestransactionline WITH(nolock) ON salestransactioncompleted.AggregateId = salestransactionline.AggregateId
 	INNER JOIN calendar ON calendar.Date = salestransactioncompleted.CompletedDate
 	LEFT OUTER JOIN ReasonCodes ON salestransactionline.ReasonDescription Is NOT NULL AND salestransactionline.ReasonDescription = ReasonCodes.Code
 	LEFT OUTER JOIN (
 		SELECT aggregateId, storeProductId, promotionId, SUM(givenaway) givenaway
-		FROM salestransactionpromotioninformation
+		FROM salestransactionpromotioninformation WITH(nolock)
 		GROUP BY aggregateId, storeProductId, promotionId
 	) salestransactionpromotioninformation ON salestransactionpromotioninformation.aggregateId = salestransactionline.aggregateId AND salestransactionpromotioninformation.storeProductId =salestransactionline.storeProductId
-	LEFT OUTER JOIN promotion ON salestransactionpromotioninformation.promotionId = promotion.PromotionId
+	LEFT OUTER JOIN promotion WITH(nolock) ON salestransactionpromotioninformation.promotionId = promotion.PromotionId
 	WHERE (completedDate >= @startdate OR @startdate IS NULL) AND completedDate <= @enddate AND ISNULL(subSectionId, sectionId) IS NOT NULL
 	GROUP BY
 		salestransactioncompleted.AggregateId,
