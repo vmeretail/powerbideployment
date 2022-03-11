@@ -1,8 +1,8 @@
 ﻿CREATE OR ALTER VIEW [dbo].[uvwNearStreetData]
 AS
-SELECT 
+SELECT
 	store.StoreId,
-	store.Name as StoreName,
+	store.StoreName as StoreName,
 	store.ExternalStoreId as StoreNumber,
 	storeproduct.StoreProductId,
 	OrganisationProductProjectionState.Description as ProductDescription,
@@ -10,9 +10,9 @@ SELECT
 	organisationproductprice.Price,
 	StoreProductState.CurrentStockLevel as Quantity,	
 	'GBP' as Currency
-FROM storeproduct
+FROM StoreProductStateProjection storeproduct
 inner join OrganisationProductProjectionState on OrganisationProductProjectionState.OrganisationProductId = storeproduct.OrganisationProductId
-INNER JOIN store on store.StoreId = storeproduct.StoreId
+INNER JOIN StoreProjectionState store on store.StoreReportingId = storeproduct.StoreReportingId
 INNER JOIN storepriceband on store.StoreId = storepriceband.StoreId
 INNER JOIN organisationproductprice on organisationproductprice.OrganisationProductId = storeproduct.OrganisationProductId 
 									   AND organisationproductprice.Band = storepriceband.Band
