@@ -1,7 +1,7 @@
 CREATE OR ALTER VIEW [dbo].[pocStoresView]
 AS
 SELECT 
-	StoreId,
+	StoreProjectionState.StoreId,
 	ExternalStoreId,
 	StoreName + ' (' + ExternalStoreId + ')' as Name,
 	StoreStatus as Status,
@@ -10,6 +10,9 @@ SELECT
 	LastOrder,
 	LastSale,
 	PriceBand,
-	StoreReportingId
+	WastageAndRTCTarget,
+	StoreProjectionState.StoreReportingId,
+	areamanagerstore.AreaManagerId
 FROM StoreProjectionState
+LEFT OUTER JOIN areamanagerstore on areamanagerstore.StoreReportingId = StoreProjectionState.StoreReportingId
 WHERE StoreStatus = 2
