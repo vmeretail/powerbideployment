@@ -1,7 +1,7 @@
 CREATE OR ALTER VIEW [dbo].[pocOrderHeaderView]
 AS
-select 
 
+select 
 [order].OrderId,
 [order].ExternalOrderId as [Order Number],
 [order].Status as [Order Status],
@@ -33,8 +33,7 @@ count(*) as [Ordered Times Count],
 				END
 
 from [order]
-inner join orderItem on orderItem.OrderId = [order].OrderId
---left outer join deliveryItem on deliveryItem.OrderId = orderItem.OrderId and orderItem.StoreProductId = deliveryItem.StoreProductId
+inner join orderItemProjectionState orderItem on orderItem.OrderId = [order].OrderId
 left outer join (
 	select delivery.OrderId, StoreProductId, NumberOfCasesDelivered 
 	from deliveryItem
