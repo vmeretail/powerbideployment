@@ -25,5 +25,5 @@ AS
 	    ,store.[Name] [Store] 
     FROM SalesSummaryByProduct
     INNER JOIN producthierarchy ON SalesSummaryByProduct.HierarchyNodeId = producthierarchy.ProductHierarchyId
-    INNER JOIN organisationproduct ON SalesSummaryByProduct.OrganisationProductId = organisationproduct.OrganisationProductId
+    INNER JOIN OrganisationProductProjectionState ON SalesSummaryByProduct.OrganisationProductId = OrganisationProductProjectionState.OrganisationProductId
     INNER JOIN store ON SalesSummaryByProduct.storeId = store.StoreId

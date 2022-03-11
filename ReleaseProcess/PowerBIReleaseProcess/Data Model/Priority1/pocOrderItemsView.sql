@@ -1,24 +1,24 @@
 CREATE OR ALTER   VIEW [dbo].[pocOrderItemsView]
 AS
-SELECT  
+SELECT 
 	[order].OrderId, 
 	[order].ExternalOrderId [Order Number], 
 	[order].CreatedDateTime,
 	CONVERT(VARCHAR(10), [order].ExternalOrderId) [Order Number String],
-	store.[Name] Store,
-	orderItem.ExternalOrderItemId, 
+	StoreProjectionState.StoreName Store,
+	orderItemProjectionState.ExternalOrderItemId, 
 	sub.SubstitutedOrderItemId, 
 	replacementId,
 	ISNULL(NumberOfCasesOrdered, 0)  [Cases Ordered],
-	organisationproduct.OrganisationProductId [Original product Id],
+	OrganisationProductProjectionState.OrganisationProductId [Original product Id],
 	rep.OrganisationProductId [Swapped Product Id],
 	CASE
-		WHEN organisationproduct.OrganisationProductId = rep.OrganisationProductId THEN 'Same Product'
+		WHEN OrganisationProductProjectionState.OrganisationProductId = rep.OrganisationProductId THEN 'Same Product'
 		ELSE 'Different Product'
 	END [Swapout Type],
-	organisationproduct.[Description] [Original Description],
+	OrganisationProductProjectionState.[Description] [Original Description],
 	rep.[Description] [Swapped Description],
-	organisationproduct.ItemSize [Original Item Size],
+	OrganisationProductProjectionState.ItemSize [Original Item Size],
 	rep.ItemSize [Swapped Item Size],
 	supplier.SupplierName [Original Supplier],
 	rep.SupplierName [Swapped Supplier],
@@ -30,18 +30,18 @@ SELECT
 	CONVERT(DECIMAL(18,2), ISNULL(rep.CostPrice, 0) * ISNULL([Swapped Cases Delivered], 0)) [Swapped Total Cost Price],
 	ISNULL(NumberOfCasesDelivered, 0) [Cases Delivered],
 	ISNULL([Swapped Cases Delivered], 0) [Swapped Cases Delivered],
-    CONCAT(orderItem.SIC, ' (', supplierproduct.[Priority], ')') [Original Sic],
+    CONCAT(orderItemProjectionState.SIC, ' (', supplierproduct.[Priority], ')') [Original Sic],
 	CONCAT([Swapped Sic], ' (', rep.[Priority], ')') [Swapped Sic],
 	CASE
-		WHEN organisationproduct.OrganisationProductId = rep.OrganisationProductId THEN CONCAT(supplier.SupplierName, ' (S)')
+		WHEN OrganisationProductProjectionState.OrganisationProductId = rep.OrganisationProductId THEN CONCAT(supplier.SupplierName, ' (S)')
 		ELSE CONCAT(supplier.SupplierName, ' (D)')
 	END [Supplier Swapout Type]
 FROM [order]
-INNER JOIN orderitem ON [order].orderId = orderItem.OrderId
-INNER JOIN store ON [order].StoreId = store.StoreId
-INNER JOIN organisationproduct ON orderItem.OrganisationProductId = organisationproduct.OrganisationProductId
+INNER JOIN orderItemProjectionState ON [order].orderId = orderItemProjectionState.OrderId
+INNER JOIN StoreProjectionState ON [order].StoreId = StoreProjectionState.StoreId
+INNER JOIN OrganisationProductProjectionState ON orderItemProjectionState.OrganisationProductId = OrganisationProductProjectionState.OrganisationProductId
 INNER JOIN supplier ON [order].SupplierId = supplier.SupplierId
-INNER JOIN supplierproduct ON supplierproduct.OrganisationProductId = orderItem.OrganisationProductId AND supplierproduct.SupplierId = [order].SupplierId AND supplierproduct.Sic = orderItem.SIC
+INNER JOIN supplierproduct ON supplierproduct.OrganisationProductId = orderItemProjectionState.OrganisationProductId AND supplierproduct.SupplierId = [order].SupplierId AND supplierproduct.Sic = orderItemProjectionState.SIC
 INNER JOIN (
 	SELECT 
 		delivery.OrderId, 
@@ -52,40 +52,40 @@ INNER JOIN (
 	GROUP BY
 		delivery.OrderId, 
 		SubstitutedOrderItemId
-) sub ON sub.SubstitutedOrderItemId = orderItem.ExternalOrderItemId 
+) sub ON sub.SubstitutedOrderItemId = orderItemProjectionState.ExternalOrderItemId 
 INNER JOIN (
 	SELECT 
-		orderitem.OrderId, 
-		orderitem.ExternalOrderItemId, 
+		orderItemProjectionState.OrderId, 
+		orderItemProjectionState.ExternalOrderItemId, 
 		rep.ExternalOrderItemId replacementId,
 		rep.SIC [Swapped SIC],
 		supplierproduct.CaseSize,
 		supplierproduct.CostPrice,
 		supplierproduct.[Priority],
-		organisationproduct.[Description],
-		organisationproduct.ItemSize,
-		organisationproduct.OrganisationProductId,
+		OrganisationProductProjectionState.[Description],
+		OrganisationProductProjectionState.ItemSize,
+		OrganisationProductProjectionState.OrganisationProductId,
 		supplier.SupplierName,
 		SUM(NumberOfCasesDelivered) [Swapped Cases Delivered]
-	from orderitem
-	INNER JOIN [order] ON [order].OrderId = orderItem.OrderId
-	INNER JOIN delivery ON delivery.OrderId = orderItem.OrderId
-	INNER JOIN deliveryItem ON delivery.deliveryId = deliveryItem.deliveryid AND deliveryItem.SubstitutedOrderItemId = orderItem.ExternalOrderItemId
-	INNER JOIN orderitem rep ON orderitem.OrderId = rep.OrderId AND rep.SIC = deliveryItem.Sic AND rep.StoreProductId = deliveryItem.StoreProductId
+	from orderItemProjectionState
+	INNER JOIN [order] ON [order].OrderId = orderItemProjectionState.OrderId
+	INNER JOIN delivery ON delivery.OrderId = orderItemProjectionState.OrderId
+	INNER JOIN deliveryItem ON delivery.deliveryId = deliveryItem.deliveryid AND deliveryItem.SubstitutedOrderItemId = orderItemProjectionState.ExternalOrderItemId
+	INNER JOIN orderItemProjectionState rep ON orderItemProjectionState.OrderId = rep.OrderId AND rep.SIC = deliveryItem.Sic AND rep.StoreProductId = deliveryItem.StoreProductId
 	INNER JOIN supplierproduct ON supplierproduct.OrganisationProductId = rep.OrganisationProductId AND supplierproduct.SupplierId = [order].SupplierId AND supplierproduct.Sic = rep.SIC
-	INNER JOIN organisationproduct ON rep.OrganisationProductId = organisationproduct.OrganisationProductId
+	INNER JOIN OrganisationProductProjectionState ON rep.OrganisationProductId = OrganisationProductProjectionState.OrganisationProductId
 	INNER JOIN supplier ON [order].SupplierId = supplier.SupplierId
 	GROUP BY
-		orderitem.OrderId, 
-		orderitem.ExternalOrderItemId, 
+		orderItemProjectionState.OrderId, 
+		orderItemProjectionState.ExternalOrderItemId, 
 		rep.ExternalOrderItemId,
 		rep.SIC,
 		supplierproduct.CaseSize,
 		supplierproduct.CostPrice, 
 		supplierproduct.[Priority],
-		organisationproduct.[Description],
-		organisationproduct.ItemSize,
-		organisationproduct.OrganisationProductId,
+		OrganisationProductProjectionState.[Description],
+		OrganisationProductProjectionState.ItemSize,
+		OrganisationProductProjectionState.OrganisationProductId,
 		supplier.SupplierName
-) rep on rep.OrderId = [order].OrderId AND rep.ExternalOrderItemId = orderItem.ExternalOrderItemId
-WHERE orderItem.SIC <> [Swapped SIC]
+) rep on rep.OrderId = [order].OrderId AND rep.ExternalOrderItemId = orderItemProjectionState.ExternalOrderItemId
+WHERE orderItemProjectionState.SIC <> [Swapped SIC]
