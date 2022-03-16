@@ -82,6 +82,15 @@
 	  <None Update="Data Model\Priority1\pocSuppliersView.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Data Model\Priority1\uvwHierarchyDepartmentView.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwHierarchySectionView.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwHierarchySubSectionView.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Data Model\Priority1\uvwHourlySalesComparison.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
@@ -89,6 +98,12 @@
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	  <None Update="Data Model\Priority1\uvwSalesSummaryByProduct.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwStoreProductActivity.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwStoreProductActivity_PreviousYear.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	  <None Update="Data Model\Priority2\dbo.uvwNearStreetData.View.sql">

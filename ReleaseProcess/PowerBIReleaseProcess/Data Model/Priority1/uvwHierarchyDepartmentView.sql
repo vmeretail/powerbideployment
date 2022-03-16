@@ -7,4 +7,3 @@ SELECT
 	DepartmentNumber
  FROM producthierarchy
  WHERE DepartmentId IS NOT NULL
-
