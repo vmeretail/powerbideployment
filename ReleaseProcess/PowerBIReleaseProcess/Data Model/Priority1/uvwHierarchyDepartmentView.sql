@@ -7,3 +7,5 @@ SELECT
 	DepartmentNumber
  FROM producthierarchy
  WHERE DepartmentId IS NOT NULL
+ and SectionId is null 
+ and Field != 6

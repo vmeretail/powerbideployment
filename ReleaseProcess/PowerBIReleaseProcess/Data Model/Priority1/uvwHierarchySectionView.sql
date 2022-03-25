@@ -9,3 +9,4 @@ SELECT
  FROM producthierarchy
  WHERE SectionId IS NOT NULL
  And SubSectionId IS NULL
+ and Field != 6
