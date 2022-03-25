@@ -28,6 +28,30 @@
 	  <None Update="Data Model\Priority1\pocDeliveryDetailsView.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Data Model\Priority1\uvwStoresView.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwAreaManager.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwBudget.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwCashierPerformanceSummary.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority2\uvwFlashCurrentCustomers.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwFlashSalesCurrent.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwFlashSalesPrevious.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Data Model\Priority1\uvwHierarchyDepartmentView.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Data Model\Priority1\pocHierarchyView.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

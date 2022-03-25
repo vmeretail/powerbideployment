@@ -1,4 +1,4 @@
-CREATE OR ALTER VIEW [dbo].pocStoresView
+CREATE OR ALTER VIEW [dbo].[uvwStoresView]
 AS
 SELECT 
 	StoreProjectionState.StoreId,
