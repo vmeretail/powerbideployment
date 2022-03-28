@@ -23,10 +23,7 @@
     <PackageReference Include="AWSSDK.SQS" Version="3.3.100.7" />
     <PackageReference Include="AWSSDK.ECR" Version="3.3.100.13" />
     <PackageReference Include="Shouldly" Version="4.0.0-beta0002" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\PowerBIReleaseProcess\PowerBIReleaseProcess.csproj" />
+    <PackageReference Include="Vme.Logging" Version="2.0.2" />
   </ItemGroup>
 
 </Project>

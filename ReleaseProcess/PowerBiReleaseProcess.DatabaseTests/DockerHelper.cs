@@ -143,7 +143,7 @@ namespace PowerBiReleaseProcess.DatabaseTests
             // these should always be Eposity as it's the folder on the actual containers
             String containerTraceDir = "/home/forge/eposity/trace/";
             DockerHelper.QueryModelWriterContainer = new Builder().UseContainer()
-                                                                  //.UseImage($"{dockerRegistryUrl}/vmeeposityquerymodelwriter:latest")
+                                                                  //.UseImage($"{dockerRegistryUrl}/vmeeposityquerymodelwriter:latest", true)
                                                                   .UseImage($"{dockerRegistryUrl}/vmeeposityquerymodelwriter:feature", true)
                                                                   //.UseImage($"vmeeposityquerymodelwriter:latest")
                                                                   .ExposePort(5023)

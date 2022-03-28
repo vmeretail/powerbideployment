@@ -1,22 +1,108 @@
-﻿namespace PowerBIReleaseProcess
-{
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Logging;
-    using NLog.Extensions.Logging;
-    using Vme.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
-    /// <summary>
-    /// 
-    /// </summary>
+namespace PowerBIReleaseTool
+{
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using NLog;
+    using NLog.Config;
+    using NLog.Extensions.Logging;
+    using System.Diagnostics;
+    using System.IO;
+    using System.IO.Abstractions;
+    using System.Reflection;
+    using System.Threading;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Hosting;
+    using Services;
+    using Services.Database;
+    using Services.PowerBi;
+    using Vme.Configuration;
+    using Vme.Logging;
+    using Logger = Vme.Logging.Logger;
+
     internal class Program
     {
-        #region Fields
+        /// <summary>
+        /// The services
+        /// </summary>
+        public static IServiceProvider Services;
+
+        /// <summary>
+        ///  The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static async Task Main()
+        {
+            CancellationToken cancellationToken = new CancellationToken();
+
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            IHostBuilder builder = Host.CreateDefaultBuilder().ConfigureServices((hostContext,
+                                                                                  services) =>
+                                                                                 {
+                                                                                     Program.SetupConfiguration();
+                                                                                     Program.SetupLogging(services);
+                                                                                     Program.ConfigureServices(services);
+                                                                                 });
+
+            IHost host = builder.Build();
+
+            using (IServiceScope serviceScope = host.Services.CreateScope())
+            {
+                IServiceProvider services = serviceScope.ServiceProvider;
+                try
+                {
+                    Program.Services = services;
+                    
+                    IPresenter presenter = services.GetRequiredService<IPresenter>();
+                    await presenter.Start(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteToLog($"Error creating scope\n{ex.Message}", LoggerCategory.General, TraceEventType.Error);
+
+                    MessageBox.Show(ex.Message, @"Unhandled Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private static void ConfigureServices(IServiceCollection services)
+        {
+            services.AddSingleton<IMainForm, MainForm>();
+            services.AddTransient<MainFormViewModel>();
+            services.AddSingleton<IPresenter, Presenter>();
+            services.AddSingleton<IGitHubService, GitHubService>();
+            //services.AddSingleton<IReleaseProcess, ReleaseProcess>();
+            services.AddSingleton<IDatabaseManager, DatabaseManager>();
+            services.AddSingleton<IFileSystem, FileSystem>();
+            services.AddSingleton<IPowerBiService, PowerBiService>();
+            services.AddSingleton<ITokenService, TokenService>();
+        }
+
+        public static void SetupConfiguration()
+        {
+            String path = Assembly.GetExecutingAssembly().Location;
+            path = Path.GetDirectoryName(path);
+            String localAppsettingsFolder = !String.IsNullOrWhiteSpace(path) ? Path.Combine(path, "..") : String.Empty;
+
+            IConfigurationBuilder builder = new ConfigurationBuilder();
+            var a = Directory.GetCurrentDirectory();
+            builder.SetBasePath(Directory.GetCurrentDirectory());
+            // TODO: Include development files
+            builder.AddJsonFile("appsettings.json", true);
+            builder.AddJsonFile("appsettings.powerbi.json", true);
+
+            Program.Configuration = builder.Build();
+
+            ConfigurationReader.Initialise(Program.Configuration);
+        }
 
         /// <summary>
         /// The configuration
@@ -24,111 +110,22 @@
         public static IConfigurationRoot Configuration;
 
         /// <summary>
-        /// The release profiles
+        /// Setups the logging.
         /// </summary>
-        private static List<ReleaseProfile> ReleaseProfiles;
-
-        /// <summary>
-        /// The token service
-        /// </summary>
-        private static ITokenService TokenService;
-
-        #endregion
-
-        #region Methods
-        
-        /// <summary>
-        /// Loads the configuration.
-        /// </summary>
-        private static void LoadConfiguration()
+        /// <param name="services">The services.</param>
+        private static void SetupLogging(IServiceCollection services)
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder().SetBasePath(Path.Combine(AppContext.BaseDirectory))
-                                                                      .AddJsonFile("appsettings.json", optional:true)
-                                                                      .AddJsonFile("appsettings.development.json", optional: true);
+            services.AddLogging();
+            ILoggerFactory loggerFactory = services.BuildServiceProvider()
+                                                   .GetRequiredService<ILoggerFactory>();
 
-            Program.Configuration = builder.Build();
+            loggerFactory.AddNLog();
 
-            Program.ReleaseProfiles = Program.Configuration.GetSection("ReleaseProfiles").Get<List<ReleaseProfile>>();
+            LogManager.Configuration = new XmlLoggingConfiguration("nlog.config", true);
+
+            //Logger needs initialised.
+            Logger.Initialise(loggerFactory.CreateLogger<Program>());
         }
-
-        /// <summary>
-        /// Defines the entry point of the application.
-        /// </summary>
-        /// <param name="args">The arguments.</param>
-        private static async Task<Int32> Main(String[] args)
-        {
-            try
-            {
-                Program.LoadConfiguration();
-
-                if (args.Length != 3)
-                {
-                    //PrintErrorMessage("Invalid Args"); // TODO: Better message
-                    return -1;
-                }
-
-                Logger.Initialise(new LoggerFactory().AddNLog().CreateLogger("Logger"));
-
-                // Get the first argument (this is the release package location)
-                String releasePackageLocation = args[0];
-
-                // Get the second argument (this is the release package version)
-                String releaseVersion = args[1];
-
-                // Get the second argument (this is the customer)
-                ReleaseProfile releaseProfile = Program.GetReleaseProfile(args[2]);
-
-                DatabaseManager databaseManager = new DatabaseManager(releaseProfile.ConnectionString);
-
-                await databaseManager.RunScripts();
-
-                ITokenService tokenService = new TokenService();
-
-                Func<String, IPowerBIService> powerBiServiceResolver = (token) =>
-                {
-                    String powerBiApiUrl = Program.Configuration.GetSection("AppSettings:PowerBiApiUrl").Value;
-                    Int32 fileImportCheckRetryAttempts =
-                        Int32.Parse(Program.Configuration.GetSection("AppSettings:FileImportCheckRetryAttempts")
-                            .Value);
-                    Int32 fileImportCheckSleepIntervalInSeconds =
-                        Int32.Parse(Program.Configuration
-                            .GetSection("AppSettings:FileImportCheckSleepIntervalInSeconds").Value);
-
-                    return new PowerBIService(powerBiApiUrl,
-                        token,
-                        fileImportCheckRetryAttempts,
-                        fileImportCheckSleepIntervalInSeconds);
-                };
-                Func<IGitHubService> gitHubServiceResolver = () =>
-                {
-                    String gitHubApiUrl = Program.Configuration.GetSection("AppSettings:GitHubApiUrl").Value;
-                    String gitHubAccessToken = Program.Configuration.GetSection("AppSettings:GithubAccessToken").Value;
-
-                    return new GitHubService(gitHubApiUrl, gitHubAccessToken);
-                };
-                IPowerBiReleaseProcess releaseProcess =
-                    new PowerBiReleaseProcess(tokenService, powerBiServiceResolver, gitHubServiceResolver);
-
-                await releaseProcess.DeployRelease(releasePackageLocation, releaseVersion, releaseProfile,
-                    CancellationToken.None);
-
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                return -1;
-            }
-        }
-        
-        private static ReleaseProfile GetReleaseProfile(String organisationName)
-        {
-            ReleaseProfile? profile = Program.ReleaseProfiles.SingleOrDefault(p => String.Compare(p.Name.ToString() ,organisationName, true) == 0);
-
-            return profile;
-        }
-        
-        #endregion
-
     }
-    
 }
+
