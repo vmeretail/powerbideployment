@@ -13,7 +13,6 @@ namespace PowerBiReleaseProcess.DatabaseTests
     using System.Threading.Tasks;
     using Microsoft.Extensions.Configuration;
     using Newtonsoft.Json;
-    using PowerBIReleaseProcess;
     using Shouldly;
     using Vme.Logging;
     using Xunit;
@@ -94,23 +93,25 @@ namespace PowerBiReleaseProcess.DatabaseTests
 
             if (response.IsSuccessStatusCode == false)
             {
-                throw new Exception("Error prosing Organsation Created Event to query rest");
+                throw new Exception("Error posting Organsation Created Event to query rest");
             }
 
             ShouldlyConfiguration.DefaultTaskTimeout = TimeSpan.FromMinutes(5);
             
-            // ensure all sql files are set to be copied to the bin folder.
-            this.VerifyCopyToBin().ShouldBeTrue();
-
             var connectionString = DockerHelper.GetSqlServerConnectionString(false, $"OrganisationRead{organisationCreatedEvent.organisationId}");
 
-            DatabaseManager manager = new DatabaseManager(connectionString);
+            String executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
+            String executingAssemblyFolder = Path.GetDirectoryName(executingAssemblyLocation);
+            String dataModelPath = Path.Combine(executingAssemblyFolder, "../../../../../", "Data Model");
+
+
+            DatabaseManager manager = new DatabaseManager(connectionString, dataModelPath);
             await manager.RunScripts();
             
             await this.RunStoredProcedures(connectionString, CancellationToken.None);
         }
 
-        public Boolean VerifyCopyToBin()
+        public Boolean VerifyCopyToBin(String dataModelpath)
         {
             String executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
             String executingAssemblyFolder = Path.GetDirectoryName(executingAssemblyLocation);
