@@ -21,7 +21,8 @@ FROM
 		DATEADD(HOUR, DATEPART(HOUR, CompletedDateTime), CONVERT(DATETIME, CONVERT(DATE, CompletedDateTime))) CompletedDateHour,
 		SUM(TotalRetailValueInc) Gross,
 		SUM(TotalRetailValueEx) Net  
-	FROM salestransactioncompleted 
+	FROM salestransactioncompleted
+	WHERE salestransactioncompleted.CompletedDate != '0001-01-01'
 	GROUP BY 
 		StoreId,
 		DATEADD(HOUR, DATEPART(HOUR, CompletedDateTime), CONVERT(DATETIME, CONVERT(DATE, CompletedDateTime)))
@@ -34,6 +35,7 @@ LEFT JOIN
 		SUM(TotalRetailValueInc) Gross,
 		SUM(TotalRetailValueEx) Net    
 	FROM salestransactioncompleted 
+	WHERE salestransactioncompleted.CompletedDate != '0001-01-01'
 	GROUP BY 
 		StoreId,
 		DATEADD(HOUR, DATEPART(HOUR, CompletedDateTime), CONVERT(DATETIME, CONVERT(DATE, CompletedDateTime)))
@@ -46,6 +48,7 @@ LEFT JOIN
 		SUM(TotalRetailValueInc) Gross,
 		SUM(TotalRetailValueEx) Net    
 	FROM salestransactioncompleted 
+	WHERE salestransactioncompleted.CompletedDate != '0001-01-01'
 	GROUP BY 
 		StoreId,
 		DATEADD(HOUR, DATEPART(HOUR, CompletedDateTime), CONVERT(DATETIME, CONVERT(DATE, CompletedDateTime)))
@@ -58,6 +61,7 @@ LEFT JOIN
 		SUM(TotalRetailValueInc) Gross,
 		SUM(TotalRetailValueEx) Net    
 	FROM salestransactioncompleted 
+	WHERE salestransactioncompleted.CompletedDate != '0001-01-01'
 	GROUP BY 
 		StoreId,
 		DATEADD(HOUR, DATEPART(HOUR, CompletedDateTime), CONVERT(DATETIME, CONVERT(DATE, CompletedDateTime)))
