@@ -53,7 +53,7 @@ namespace PowerBiReleaseProcess.DatabaseTests
             public async Task CreateDataModelViews()
             {
                 String[] directiories = Directory.GetDirectories(this.DataModelPath);
-                directiories = directiories.Where(d => d.Contains("StoredProcedures") == false).OrderBy(d => d).ToArray();
+                directiories = directiories.Where(d => d.Contains("StoredProcedures") == false && d.Contains("Tools") == false).OrderBy(d => d).ToArray();
 
                 foreach (String directory in directiories)
                 {
