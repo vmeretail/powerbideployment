@@ -36,8 +36,8 @@ from [order]
 inner join orderItemProjectionState orderItem on orderItem.OrderId = [order].OrderId
 left outer join (
 	select delivery.OrderId, StoreProductId, NumberOfCasesDelivered 
-	from deliveryItem
-	inner join delivery on delivery.deliveryId = deliveryitem.deliveryid
+	from deliveryItemProjectionState
+	inner join delivery on delivery.deliveryId = deliveryItemProjectionState.deliveryid
 ) deliveryItem on deliveryItem.OrderId = [order].OrderId and orderItem.StoreProductId = deliveryItem.StoreProductId
 
 GROUP BY [order].OrderId,
