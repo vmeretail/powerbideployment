@@ -1,11 +1,4 @@
-/****** Object:  StoredProcedure [dbo].[spImportStorePreviousYearData]    Script Date: 4/7/2022 10:12:51 AM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE PROCEDURE [dbo].[spImportStorePreviousYearData]  @calendaryear int, @externalstoreid char(36),@tablename varchar(50)
+CREATE OR ALTER PROCEDURE [dbo].[spImportStorePreviousYearData]  @calendaryear int, @externalstoreid char(36),@tablename varchar(50)
 AS
 --declare @calendaryear int-- sp param - 2021
 --declare @externalstoreid char(36) -- sp param - from v2
