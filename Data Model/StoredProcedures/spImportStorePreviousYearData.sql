@@ -250,6 +250,6 @@ inner join store on store.ExternalStoreCode = transkeyarchive.store
 inner join StoreProjectionState on StoreProjectionState.StoreId = store.StoreId
 left outer join OrganisationProductProjectionState on OrganisationProductProjectionState.ExternalProductId = transkeyarchive.VMECode
 left outer join producthierarchy on producthierarchy.ProductHierarchyId = OrganisationProductProjectionState.ProductHierarchyNodeId
-GO
+
 
 
