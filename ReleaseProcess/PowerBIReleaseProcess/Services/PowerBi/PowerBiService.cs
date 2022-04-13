@@ -177,6 +177,11 @@
             // get the products dataset (it holds the version number)
             var productsDataSet = response.Body.Value.SingleOrDefault(d => d.Name == $"VME Master - Products");
 
+            if (productsDataSet == null)
+            {
+                return "N/A";
+            }
+
             HttpOperationResponse<MashupParameters> datasetParameters = await powerBiClient.Datasets.GetParametersInGroupWithHttpMessagesAsync(customerConfiguration.GroupId, productsDataSet.Id, cancellationToken: cancellationToken);
 
             var version = datasetParameters.Body.Value.SingleOrDefault(p => p.Name == "Version");
