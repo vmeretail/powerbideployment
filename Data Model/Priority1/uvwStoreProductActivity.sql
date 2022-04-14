@@ -32,11 +32,15 @@ SELECT
   storeproductactivity.SalesTransactionId, 
   storeproductactivity.OrganisationProductId, 
   storeproductactivity.OrganisationProductReportingId, 
-  storeproductactivity.RetailPrice,
-  ISNULL(storeproductactivity.SoldForPrice, 0) as SoldForPrice,
+  CASE WHEN storeproductactivity.NumberOfItemsSold < 0
+	THEN ISNULL(storeproductactivity.RetailPrice, 0) * -1
+	ELSE ISNULL(storeproductactivity.RetailPrice, 0) END as RetailPrice,
+  CASE WHEN storeproductactivity.NumberOfItemsSold < 0
+	THEN ISNULL(storeproductactivity.SoldForPrice, 0) * -1
+	ELSE ISNULL(storeproductactivity.SoldForPrice, 0) END as SoldForPrice,
    CASE storeproductactivity.ActivityType
-	WHEN 6 THEN storeproductactivity.RetailPrice - ISNULL(storeproductactivity.SoldForPrice, 0) 
-	WHEN 7 THEN storeproductactivity.RetailPrice - ISNULL(storeproductactivity.SoldForPrice, 0) 
+	WHEN 6 THEN CASE WHEN NumberOfitemsSold < 0 THEN retailprice * -1 ELSE RetailPrice END - ISNULL(CASE WHEN NumberOfitemsSold < 0 THEN soldforprice * -1 ELSE soldforprice END, 0) 
+	WHEN 7 THEN CASE WHEN NumberOfitemsSold < 0 THEN retailprice * -1 ELSE RetailPrice END - ISNULL(CASE WHEN NumberOfitemsSold < 0 THEN soldforprice * -1 ELSE soldforprice END, 0) 
 	ELSE 0 
 	END as Variance,
   storeproductactivity.StoreReportingId,
