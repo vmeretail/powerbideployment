@@ -163,89 +163,124 @@
 
                 String[]? fileCount = Directory.GetFiles($"{customerDirectory}", "*.*", SearchOption.AllDirectories);
                 this.MainForm.InitialiseProgressBar(fileCount.Length);
-                String[]? databaseScripts = Directory.GetFiles($"{customerDirectory}\\DataModel", "*.sql", SearchOption.AllDirectories);
 
-                if (databaseScripts.Length == 0)
+                if (Directory.Exists($"{customerDirectory}\\DataModel") == false)
                 {
                     this.MainForm.writeNormal("No database scripts to be released");
                 }
+
                 else
                 {
-                    this.MainForm.writeNormal($"About to deploy {databaseScripts.Length} scripts to customers read model");
-                    this.MainForm.writeNormal($"Connection String: {customerConfiguration.ConnectionString}");
-                    foreach (String databaseScript in databaseScripts)
+                    String[]? databaseScripts = Directory.GetFiles($"{customerDirectory}\\DataModel", "*.sql",
+                        SearchOption.AllDirectories);
+
+                    if (databaseScripts.Length == 0)
                     {
-                        try
+                        this.MainForm.writeNormal("No database scripts to be released");
+                    }
+                    else
+                    {
+                        this.MainForm.writeNormal(
+                            $"About to deploy {databaseScripts.Length} scripts to customers read model");
+                        this.MainForm.writeNormal($"Connection String: {customerConfiguration.ConnectionString}");
+                        foreach (String databaseScript in databaseScripts)
                         {
-                            this.MainForm.writeNormal($"About to deploy {databaseScript}");
-                            await this.DatabaseManager.ExecuteScript(customerConfiguration.ConnectionString, databaseScript, cancellationToken);
-                            this.MainForm.writePositive($"{databaseScript} deployed successfully");
-                            this.MainForm.IncrementProgressBar();
-                        }
-                        catch(Exception ex)
-                        {
-                            throw new Exception($"Script: {databaseScript} deployment failed, {ex.Message}");
+                            try
+                            {
+                                this.MainForm.writeNormal($"About to deploy {databaseScript}");
+                                await this.DatabaseManager.ExecuteScript(customerConfiguration.ConnectionString,
+                                    databaseScript, cancellationToken);
+                                this.MainForm.writePositive($"{databaseScript} deployed successfully");
+                                this.MainForm.IncrementProgressBar();
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception($"Script: {databaseScript} deployment failed, {ex.Message}");
+                            }
                         }
                     }
                 }
-                
-                String[] datasetFiles = Directory.GetFiles($"{customerDirectory}\\Datasets", "*.pbix", SearchOption.AllDirectories);
-                // TODO: Null check, why is this a null
-                if (datasetFiles == null && datasetFiles.Length == 0)
+
+                if (Directory.Exists($"{customerDirectory}\\Datasets") == false)
                 {
                     this.MainForm.writeNormal($"No datasets to deploy found at path {customerDirectory}\\Datasets");
                 }
+
                 else
                 {
-                    // We have some files to release
-                    this.MainForm.writeNormal($"About to deploy {datasetFiles.Length} datasets to customers workspace");
 
-                    foreach (String datasetFile in datasetFiles)
+                    String[] datasetFiles = Directory.GetFiles($"{customerDirectory}\\Datasets", "*.pbix",
+                        SearchOption.AllDirectories);
+                    // TODO: Null check, why is this a null
+                    if (datasetFiles == null && datasetFiles.Length == 0)
                     {
-                        try
+                        this.MainForm.writeNormal($"No datasets to deploy found at path {customerDirectory}\\Datasets");
+                    }
+                    else
+                    {
+                        // We have some files to release
+                        this.MainForm.writeNormal(
+                            $"About to deploy {datasetFiles.Length} datasets to customers workspace");
+
+                        foreach (String datasetFile in datasetFiles)
                         {
-                            this.MainForm.writeNormal($"About to deploy {datasetFile}");
-                            Boolean result = await this.PowerBiService.DeployDataset(customerConfiguration, datasetFile, cancellationToken);
-                            if (result == false)
+                            try
                             {
-                                throw new Exception("deployment failed");
+                                this.MainForm.writeNormal($"About to deploy {datasetFile}");
+                                Boolean result = await this.PowerBiService.DeployDataset(customerConfiguration,
+                                    datasetFile, cancellationToken);
+                                if (result == false)
+                                {
+                                    throw new Exception("deployment failed");
+                                }
+
+                                this.MainForm.IncrementProgressBar();
                             }
-                            this.MainForm.IncrementProgressBar();
-                        }
-                        catch(Exception ex)
-                        {
-                            throw new Exception($"Dataset Name: {datasetFile}, {ex.Message}");
+                            catch (Exception ex)
+                            {
+                                throw new Exception($"Dataset Name: {datasetFile}, {ex.Message}");
+                            }
                         }
                     }
                 }
-                
-                var reportFiles = Directory.GetFiles($"{customerDirectory}\\Reports", "*.pbix", SearchOption.AllDirectories);
 
-                if (reportFiles == null && reportFiles.Length == 0)
+                if (Directory.Exists($"{customerDirectory}\\Datasets") == false)
                 {
                     this.MainForm.writeNormal($"No reports to deploy found at path {customerDirectory}\\Reports");
                 }
                 else
                 {
-                    // We have some files to release
-                    this.MainForm.writeNormal($"About to deploy {reportFiles.Length} reports to customers workspace");
+                    var reportFiles = Directory.GetFiles($"{customerDirectory}\\Reports", "*.pbix",
+                        SearchOption.AllDirectories);
 
-                    foreach (String reportFile in reportFiles)
+                    if (reportFiles == null && reportFiles.Length == 0)
                     {
-                        try
-                        {
-                            this.MainForm.writeNormal($"About to deploy {reportFile}");
-                            Boolean result = await this.PowerBiService.DeployReport(customerConfiguration, reportFile, cancellationToken);
-                            if (result == false)
-                            {
-                                throw new Exception("deployment failed");
-                            }
+                        this.MainForm.writeNormal($"No reports to deploy found at path {customerDirectory}\\Reports");
+                    }
+                    else
+                    {
+                        // We have some files to release
+                        this.MainForm.writeNormal(
+                            $"About to deploy {reportFiles.Length} reports to customers workspace");
 
-                            this.MainForm.IncrementProgressBar();
-                        }
-                        catch(Exception ex)
+                        foreach (String reportFile in reportFiles)
                         {
-                            throw new Exception($"Report Name: {reportFile}, {ex.Message}");
+                            try
+                            {
+                                this.MainForm.writeNormal($"About to deploy {reportFile}");
+                                Boolean result = await this.PowerBiService.DeployReport(customerConfiguration,
+                                    reportFile, cancellationToken);
+                                if (result == false)
+                                {
+                                    throw new Exception("deployment failed");
+                                }
+
+                                this.MainForm.IncrementProgressBar();
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception($"Report Name: {reportFile}, {ex.Message}");
+                            }
                         }
                     }
                 }
