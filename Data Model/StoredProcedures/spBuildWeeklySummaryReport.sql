@@ -1,9 +1,6 @@
-CREATE OR ALTER PROCEDURE [dbo].[spBuildWeeklySummaryReport] @dateTo DATETIME = NULL
+CREATE OR ALTER PROCEDURE [dbo].[spBuildWeeklySummaryReport] @dateFrom DATETIME
 AS
-	SET @dateTo = ISNULL(@dateto, GETDATE())
-
-	DECLARE @startdate DATE = (SELECT DATEADD(DAY, 1, MAX(CompletedDate)) FROM SalesSummaryByProduct)
-	DECLARE @enddate DATE = (SELECT DATEADD(DAY, -1, CONVERT(DATE, @dateTo)))
+	DELETE FROM SalesSummaryByProduct where completeddate >= @dateFrom
 
 	INSERT INTO SalesSummaryByProduct
 	(
@@ -57,7 +54,7 @@ AS
 		GROUP BY aggregateId, storeProductId, promotionId
 	) salestransactionpromotioninformation ON salestransactionpromotioninformation.aggregateId = salestransactionline.aggregateId AND salestransactionpromotioninformation.storeProductId =salestransactionline.storeProductId
 	LEFT OUTER JOIN promotion WITH(nolock) ON salestransactionpromotioninformation.promotionId = promotion.PromotionId
-	WHERE (completedDate >= @startdate OR @startdate IS NULL) AND completedDate <= @enddate AND ISNULL(subSectionId, sectionId) IS NOT NULL
+	WHERE completedDate >= @dateFrom AND ISNULL(subSectionId, sectionId) IS NOT NULL
 	GROUP BY
 		salestransactioncompleted.AggregateId,
 		StoreId,
