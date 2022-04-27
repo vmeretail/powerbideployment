@@ -7,7 +7,7 @@ SELECT
 	CONVERT(VARCHAR(10), [order].ExternalOrderId) [Order Number String],
 	StoreProjectionState.StoreName Store,
 	orderItemProjectionState.ExternalOrderItemId, 
-	sub.SubstitutedOrderItemId, 
+	sub.OriginalOrderItemId as SubstitutedOrderItemId, 
 	replacementId,
 	ISNULL(NumberOfCasesOrdered, 0)  [Cases Ordered],
 	OrganisationProductProjectionState.OrganisationProductId [Original product Id],
@@ -45,13 +45,13 @@ INNER JOIN supplierproduct ON supplierproduct.OrganisationProductId = orderItemP
 INNER JOIN (
 	SELECT 
 		delivery.OrderId, 
-		SubstitutedOrderItemId,
+		OriginalOrderItemId,
 		SUM(NumberOfCasesDelivered) NumberOfCasesDelivered
 	FROM delivery
-	INNER JOIN deliveryItemProjectionState deliveryItem ON delivery.DeliveryId = deliveryItem.DeliveryId and SubstitutedOrderItemId IS NOT NULL
+	INNER JOIN deliveryItemProjectionState deliveryItem ON delivery.DeliveryId = deliveryItem.DeliveryId and OriginalOrderItemId IS NOT NULL
 	GROUP BY
 		delivery.OrderId, 
-		SubstitutedOrderItemId
+		OriginalOrderItemId
 ) sub ON sub.SubstitutedOrderItemId = orderItemProjectionState.ExternalOrderItemId 
 INNER JOIN (
 	SELECT 
