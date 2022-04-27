@@ -7,7 +7,7 @@ SELECT
 	CONVERT(VARCHAR(10), [order].ExternalOrderId) [Order Number String],
 	StoreProjectionState.StoreName Store,
 	orderItemProjectionState.ExternalOrderItemId, 
-	sub.SubstitutedOrderItemId, 
+	sub.OriginalOrderItemId as SubstitutedOrderItemId, 
 	replacementId,
 	ISNULL(NumberOfCasesOrdered, 0)  [Cases Ordered],
 	OrganisationProductProjectionState.OrganisationProductId [Original product Id],
@@ -45,14 +45,14 @@ INNER JOIN supplierproduct ON supplierproduct.OrganisationProductId = orderItemP
 INNER JOIN (
 	SELECT 
 		delivery.OrderId, 
-		SubstitutedOrderItemId,
+		OriginalOrderItemId,
 		SUM(NumberOfCasesDelivered) NumberOfCasesDelivered
 	FROM delivery
-	INNER JOIN deliveryItem ON delivery.DeliveryId = deliveryItem.DeliveryId and SubstitutedOrderItemId IS NOT NULL
+	INNER JOIN deliveryItemProjectionState deliveryItem ON delivery.DeliveryId = deliveryItem.DeliveryId and OriginalOrderItemId IS NOT NULL
 	GROUP BY
 		delivery.OrderId, 
-		SubstitutedOrderItemId
-) sub ON sub.SubstitutedOrderItemId = orderItemProjectionState.ExternalOrderItemId 
+		OriginalOrderItemId
+) sub ON sub.OriginalOrderItemId = orderItemProjectionState.ExternalOrderItemId 
 INNER JOIN (
 	SELECT 
 		orderItemProjectionState.OrderId, 
@@ -70,7 +70,7 @@ INNER JOIN (
 	from orderItemProjectionState
 	INNER JOIN [order] ON [order].OrderId = orderItemProjectionState.OrderId
 	INNER JOIN delivery ON delivery.OrderId = orderItemProjectionState.OrderId
-	INNER JOIN deliveryItem ON delivery.deliveryId = deliveryItem.deliveryid AND deliveryItem.SubstitutedOrderItemId = orderItemProjectionState.ExternalOrderItemId
+	INNER JOIN deliveryItemProjectionState deliveryItem ON delivery.deliveryId = deliveryItem.deliveryid AND deliveryItem.OriginalOrderItemId = orderItemProjectionState.ExternalOrderItemId
 	INNER JOIN orderItemProjectionState rep ON orderItemProjectionState.OrderId = rep.OrderId AND rep.SIC = deliveryItem.Sic AND rep.StoreProductId = deliveryItem.StoreProductId
 	INNER JOIN supplierproduct ON supplierproduct.OrganisationProductId = rep.OrganisationProductId AND supplierproduct.SupplierId = [order].SupplierId AND supplierproduct.Sic = rep.SIC
 	INNER JOIN OrganisationProductProjectionState ON rep.OrganisationProductId = OrganisationProductProjectionState.OrganisationProductId

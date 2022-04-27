@@ -136,6 +136,55 @@ AS
 		INNER JOIN salestransactioncompleted WITH(nolock) ON salestransactioncompleted.AggregateId = result.AggregateId
 		group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId	
     
+		declare @includingcount int
+		declare @onlycount int
+
+		select @includingcount = count(*) from cashrecreporting where  DepartmentId = @DepartmentId and SaleType = 'includingselecteddepartment' and ReportDate = @reportStartDate
+
+		if (@includingcount = 0)
+		BEGIN
+			-- Insert zero rows
+			INSERT INTO cashrecreporting(
+			ReportDate, 
+			DepartmentId, 
+			StoreId,
+			basketCount,
+			basketTotal,
+			saleType,
+			marginTotal)
+			SELECT ReportDate, 
+			DepartmentId, 
+			StoreId,
+			0,
+			0,
+			'includingselecteddepartment',
+			0 
+			from cashrecreporting where  DepartmentId = @DepartmentId  and ReportDate = @reportStartDate and SaleType = 'total'
+		END
+		
+		select @onlycount = count(*) from cashrecreporting where  DepartmentId = @DepartmentId and SaleType = 'onlyselecteddepartment' and DepartmentId = 'A11A43AA-28CB-502E-7757-7F2E7459CF3D'
+
+		if (@onlycount = 0)
+		BEGIN
+			-- Insert zero rows
+			INSERT INTO cashrecreporting(
+			ReportDate, 
+			DepartmentId, 
+			StoreId,
+			basketCount,
+			basketTotal,
+			saleType,
+			marginTotal)
+			SELECT ReportDate, 
+			DepartmentId, 
+			StoreId,
+			0,
+			0,
+			'onlyselecteddepartment',
+			0 
+			from cashrecreporting where  DepartmentId = @DepartmentId  and ReportDate = @reportStartDate and SaleType = 'total'
+		END
+
 		FETCH NEXT FROM db_cursor INTO @DepartmentId	  
 	END 
 

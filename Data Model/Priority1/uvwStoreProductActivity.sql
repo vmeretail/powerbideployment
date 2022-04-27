@@ -24,7 +24,7 @@ SELECT
 	WHEN 6 THEN 'RTC'
 	WHEN 7 THEN 'Sale'
 	ELSE storeproductactivity.ReasonDescription END as ReasonDescription,
-  '00000000-0000-0000-0000-000000000000' as SalesTransactionLineId, 
+  '00000000-0000-0000-000000000000' as SalesTransactionLineId, 
   storeproductactivity.StockTransferQuantity, 
   storeproductactivity.StoreId, 
   storeproductactivity.StoreProductId, 
@@ -32,11 +32,24 @@ SELECT
   storeproductactivity.SalesTransactionId, 
   storeproductactivity.OrganisationProductId, 
   storeproductactivity.OrganisationProductReportingId, 
-  storeproductactivity.RetailPrice,
-  ISNULL(storeproductactivity.SoldForPrice, 0) as SoldForPrice,
+  --storeproductactivity.RetailPrice,
+ -- CASE WHEN storeproductactivity.NumberOfItemsSold < 0
+	--THEN ISNULL(storeproductactivity.RetailPrice, 0) * -1
+	--ELSE ISNULL(storeproductactivity.RetailPrice, 0) END as RetailPrice,
+ -- CASE WHEN storeproductactivity.NumberOfItemsSold < 0
+	--THEN ISNULL(storeproductactivity.SoldForPrice, 0) * -1
+	--ELSE ISNULL(storeproductactivity.SoldForPrice, 0) END as SoldForPrice,
+ --  CASE storeproductactivity.ActivityType
+	--WHEN 6 THEN storeproductactivity.RetailPrice - ISNULL(storeproductactivity.SoldForPrice, 0) 
+	--WHEN 7 THEN storeproductactivity.RetailPrice - ISNULL(storeproductactivity.SoldForPrice, 0) 
+	--ELSE 0 
+	--END as Variance,
+  CASE WHEN storeproductactivity.NumberOfItemsSold < 0
+	THEN ISNULL(storeproductactivity.RetailPrice, 0) * -1
+	ELSE ISNULL(storeproductactivity.RetailPrice, 0) END as RetailPrice,
+   ISNULL(salestransactionline.LineTotalAfterDeductions, 0) as SoldForPrice,
    CASE storeproductactivity.ActivityType
-	WHEN 6 THEN storeproductactivity.RetailPrice - ISNULL(storeproductactivity.SoldForPrice, 0) 
-	WHEN 7 THEN storeproductactivity.RetailPrice - ISNULL(storeproductactivity.SoldForPrice, 0) 
+	WHEN 6 THEN CASE WHEN NumberOfitemsSold < 0 THEN salestransactionline.OriginalPrice * -1 ELSE salestransactionline.OriginalPrice END 	
 	ELSE 0 
 	END as Variance,
   storeproductactivity.StoreReportingId,
@@ -48,3 +61,6 @@ SELECT
   OrganisationProductProjectionState.ExternalProductId
 FROM StoreProductActivity as storeproductactivity 
 inner join OrganisationProductProjectionState on OrganisationProductProjectionState.OrganisationProductReportingId = storeproductactivity.OrganisationProductReportingId
+inner join uvwHierarchyDepartmentView on uvwHierarchyDepartmentView.DepartmentId = storeproductactivity.DepartmentId
+left outer join salestransactionline on salestransactionline.AggregateId = storeproductactivity.SalesTransactionId and salestransactionline.EventId = storeproductactivity.EventId 
+and salestransactionline.EntryDate = storeproductactivity.ActivityDate
