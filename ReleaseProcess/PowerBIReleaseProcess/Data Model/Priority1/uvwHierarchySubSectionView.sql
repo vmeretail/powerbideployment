@@ -9,3 +9,4 @@ SELECT
 	SubSectionNumber
  FROM producthierarchy
  WHERE SubSectionId IS NOT NULL
+ and Field != 6
