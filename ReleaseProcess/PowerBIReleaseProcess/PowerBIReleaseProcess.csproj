@@ -28,6 +28,9 @@
 	  <None Update="Data Model\Priority1\pocDeliveryDetailsView.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Data Model\Priority1\uvwDeliveryCost.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Data Model\Priority1\uvwStoresView.sql">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
