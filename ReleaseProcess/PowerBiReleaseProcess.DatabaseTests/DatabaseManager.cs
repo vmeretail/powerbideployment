@@ -40,7 +40,7 @@ namespace PowerBiReleaseProcess.DatabaseTests
             #endregion
 
             #region Methods
-
+        
             public async Task RunScripts()
             {
                 await this.CreateDataModelViews();
@@ -82,24 +82,34 @@ namespace PowerBiReleaseProcess.DatabaseTests
             {
                 String fileName = Path.GetFileName(sqlFile);
 
-                try
-                {
-                    using (SqlConnection connection = new SqlConnection(this.ConnectionString))
-                    {
+                String content = File.ReadAllText(sqlFile, Encoding.Latin1);
+                String[] commands = null;
+                if (content.Contains("GO", StringComparison.CurrentCulture)) {
+                    commands = content.Split("GO;");
+                }
+                else {
+                    commands = new String[1];
+                    commands[0] = content;
+                }
+
+                try {
+                    Logger.WriteToLog($"Running File {fileName}", LoggerCategory.General, TraceEventType.Information);
+
+                    using(SqlConnection connection = new SqlConnection(this.ConnectionString)) {
                         await connection.OpenAsync();
 
-                        using (SqlCommand command = new SqlCommand(File.ReadAllText(sqlFile, Encoding.Latin1), connection))
-                        {
-                            Logger.WriteToLog($"Running File {fileName}", LoggerCategory.General, TraceEventType.Information);
+                        foreach (String commandText in commands) {
 
-                            await command.ExecuteNonQueryAsync(CancellationToken.None);
+                            using(SqlCommand command = new SqlCommand(commandText, connection)) {
 
-                            Logger.WriteToLog($"File {fileName} executed successfully", LoggerCategory.General, TraceEventType.Information);
+                                await command.ExecuteNonQueryAsync(CancellationToken.None);
+                            }
                         }
                     }
+
+                    Logger.WriteToLog($"File {fileName} executed successfully", LoggerCategory.General, TraceEventType.Information);
                 }
-                catch (Exception ex)
-                {
+                catch(Exception ex) {
                     Logger.WriteToLog($"Error running File {fileName}{Environment.NewLine}{ex}", LoggerCategory.General, TraceEventType.Error);
 
                     throw new Exception($"Error running File {fileName}{Environment.NewLine}{ex}");

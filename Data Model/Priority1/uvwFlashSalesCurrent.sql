@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[uvwFlashSalesCurrent]
+IF OBJECT_ID('dbo.[uvwFlashSalesCurrent]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[uvwFlashSalesCurrent]; 
+GO; 
+
+CREATE VIEW [dbo].[uvwFlashSalesCurrent]
 AS
 SELECT 
 	StoreProductActivity.ActivityDate,

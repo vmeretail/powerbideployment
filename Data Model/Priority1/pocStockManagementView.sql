@@ -1,4 +1,8 @@
-CREATE OR ALTER   VIEW [dbo].[pocStockManagementView]
+IF OBJECT_ID('dbo.[pocStockManagementView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocStockManagementView]; 
+GO; 
+
+CREATE VIEW [dbo].[pocStockManagementView]
 AS
 
 SELECT DISTINCT

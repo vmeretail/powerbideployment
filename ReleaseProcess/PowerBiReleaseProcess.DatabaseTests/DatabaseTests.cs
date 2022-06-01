@@ -104,10 +104,12 @@ namespace PowerBiReleaseProcess.DatabaseTests
             String executingAssemblyFolder = Path.GetDirectoryName(executingAssemblyLocation);
             String dataModelPath = Path.Combine(executingAssemblyFolder, "../../../../../", "Data Model");
 
-
             DatabaseManager manager = new DatabaseManager(connectionString, dataModelPath);
             await manager.RunScripts();
             
+            await this.RunStoredProcedures(connectionString, CancellationToken.None);
+
+            await manager.RunScripts();
             await this.RunStoredProcedures(connectionString, CancellationToken.None);
         }
 

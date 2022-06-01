@@ -1,4 +1,8 @@
-CREATE OR ALTER   VIEW [dbo].[pocProductsView]
+IF OBJECT_ID('dbo.[pocProductsView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocProductsView]; 
+GO; 
+
+CREATE VIEW [dbo].[pocProductsView]
 AS
 
 SELECT storeproduct.StoreProductId as [ProductId],

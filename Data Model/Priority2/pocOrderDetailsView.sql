@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[pocOrderDetailsView]
+IF OBJECT_ID('dbo.[pocOrderDetailsView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocOrderDetailsView]; 
+GO; 
+
+CREATE VIEW [dbo].[pocOrderDetailsView]
 AS
 select
 

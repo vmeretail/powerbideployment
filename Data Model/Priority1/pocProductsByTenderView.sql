@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[pocProductsByTenderView]
+IF OBJECT_ID('dbo.[pocProductsByTenderView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocProductsByTenderView]; 
+GO; 
+
+CREATE VIEW [dbo].[pocProductsByTenderView]
 AS
 SELECT 
 	salestransactioncompleted.AggregateId, 
