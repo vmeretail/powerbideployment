@@ -1,4 +1,8 @@
-CREATE OR ALTER PROCEDURE [dbo].[spBuildWeeklySummaryReport] @dateTo DATETIME = NULL
+IF OBJECT_ID('dbo.[spBuildWeeklySummaryReport]', 'P') IS NOT NULL 
+  DROP PROCEDURE dbo.[spBuildWeeklySummaryReport]; 
+GO; 
+
+CREATE PROCEDURE [dbo].[spBuildWeeklySummaryReport] @dateTo DATETIME = NULL
 AS
 	SET @dateTo = ISNULL(@dateto, GETDATE())
 

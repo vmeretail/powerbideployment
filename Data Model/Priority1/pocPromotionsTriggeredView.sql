@@ -1,4 +1,8 @@
-CREATE OR ALTER   VIEW [dbo].[pocPromotionsTriggeredView]
+IF OBJECT_ID('dbo.[pocPromotionsTriggeredView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocPromotionsTriggeredView]; 
+GO; 
+
+CREATE VIEW [dbo].[pocPromotionsTriggeredView]
 AS
 WITH Promotions AS (
 	SELECT 

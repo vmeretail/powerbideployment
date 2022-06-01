@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[pocSalesBasketHeaderView]
+IF OBJECT_ID('dbo.[pocSalesBasketHeaderView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocSalesBasketHeaderView]; 
+GO; 
+
+CREATE VIEW [dbo].[pocSalesBasketHeaderView]
 AS
 SELECT 
 	[Basket ID] = salestransactioncompleted.AggregateId,

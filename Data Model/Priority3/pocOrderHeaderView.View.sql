@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[pocOrderHeaderView]
+IF OBJECT_ID('dbo.[pocOrderHeaderView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocOrderHeaderView]; 
+GO; 
+
+CREATE VIEW [dbo].[pocOrderHeaderView]
 AS
 
 select 

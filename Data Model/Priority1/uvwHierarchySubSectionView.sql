@@ -1,4 +1,8 @@
-CREATE OR ALTER  VIEW [dbo].[uvwHierarchySubSectionView]
+IF OBJECT_ID('dbo.[uvwHierarchySubSectionView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[uvwHierarchySubSectionView]; 
+GO; 
+
+CREATE  VIEW [dbo].[uvwHierarchySubSectionView]
 AS
 SELECT 
 	DISTINCT

@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[uvwStoreProductActivity]
+IF OBJECT_ID('dbo.[uvwStoreProductActivity]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[uvwStoreProductActivity]; 
+GO; 
+
+CREATE VIEW [dbo].[uvwStoreProductActivity]
 AS
 SELECT        
   storeproductactivity.EventId, 

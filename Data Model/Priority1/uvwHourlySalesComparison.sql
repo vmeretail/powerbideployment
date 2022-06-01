@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW uvwHourlySalesComparison 
+IF OBJECT_ID('dbo.uvwHourlySalesComparison', 'V') IS NOT NULL 
+  DROP VIEW dbo.uvwHourlySalesComparison; 
+GO; 
+
+CREATE VIEW uvwHourlySalesComparison 
 AS 
 
 SELECT 

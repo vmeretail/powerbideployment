@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[uvwFlashCurrentCustomers]
+IF OBJECT_ID('dbo.[uvwFlashCurrentCustomers]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[uvwFlashCurrentCustomers]; 
+GO; 
+
+CREATE VIEW [dbo].[uvwFlashCurrentCustomers]
 AS
 SELECT 
 	CompletedDate,

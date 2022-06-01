@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW pocCashRecReportDetails
+IF OBJECT_ID('dbo.pocCashRecReportDetails', 'V') IS NOT NULL 
+  DROP VIEW dbo.pocCashRecReportDetails; 
+GO; 
+
+CREATE VIEW pocCashRecReportDetails
 AS
 select 
 	ReportDate,

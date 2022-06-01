@@ -1,4 +1,8 @@
-CREATE OR ALTER   PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime
+IF OBJECT_ID('dbo.[spBuildDepartmentCashRecReport]', 'P') IS NOT NULL 
+  DROP PROCEDURE dbo.[spBuildDepartmentCashRecReport]; 
+GO; 
+
+CREATE PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime
 AS
 	DELETE FROM CashRecReporting WHERE ReportDate >= @reportStartDate
 
