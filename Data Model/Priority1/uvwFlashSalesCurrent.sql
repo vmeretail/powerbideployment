@@ -5,8 +5,7 @@ SELECT
 	StoreProductActivity.StoreReportingId,
 	StoreProductActivity.SalesTransactionId,
 	StoreProductActivity.DepartmentId,
-	salestransactionline.LineTotalAfterDeductions as Sales
+	StoreProductActivity.SoldForPrice as Sales
 FROM StoreProductActivity
-inner join salestransactionline on salestransactionline.AggregateId = storeproductactivity.SalesTransactionId and salestransactionline.EventId = storeproductactivity.EventId 
 WHERE ActivityType IN (6,7)
 
