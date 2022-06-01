@@ -43,7 +43,8 @@ SELECT
 		ELSE pocProductsView.ProductDescription + ' (On Promotion)'
 	END as ProductDescriptionOnPromotion
 	FROM salestransactioncompleted
-    INNER JOIN salestransactionline on salestransactionline.aggregateid = salestransactioncompleted.AggregateId
+    INNER JOIN salestransactionline on salestransactioncompleted.CompletedDate = salestransactionline.EntryDate
+	AND salestransactionline.aggregateid = salestransactioncompleted.AggregateId
 	left outer join salestransactionpromotioninformation on salestransactionpromotioninformation.aggregateId = salestransactionline.aggregateId 
 															AND salestransactionpromotioninformation.storeProductId = salestransactionline.storeProductId
 	left outer join pocProductsView on pocProductsView.ProductId = salestransactionline.storeProductId

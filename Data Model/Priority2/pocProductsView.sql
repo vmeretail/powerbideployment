@@ -27,8 +27,8 @@ SELECT storeproduct.StoreProductId as [ProductId],
 	   storeproduct.NumberOfTimesOutOfStock,
 	   CONVERT(DATE, storeproduct.LastTimeOutOfStock) as LastTimeOutOfStock,
 	   CASE
-		WHEN storeproduct.LastTimeOutOfStock = '0001-01-01' THEN 'None'
-		ELSE FORMAT (storeproduct.LastTimeOutOfStock, 'dd MMMM yyyy') 
+		WHEN convert(varchar, storeproduct.LastTimeOutOfStock, 5) = '01-01-01' THEN 'None'
+		ELSE convert(varchar, storeproduct.LastTimeOutOfStock, 113)
 	   END as LastTimeOutOfStockString,
 	   storeproduct.LastTimeOutOfStock as LastTimeOutOfStockDateTime,
 
