@@ -16,7 +16,7 @@
         {
             String fileName = Path.GetFileName(sqlFilePath);
 
-            String content = File.ReadAllText(fileName, Encoding.Latin1);
+            String content = File.ReadAllText(sqlFilePath, Encoding.Latin1);
             String[] commands = null;
             if (content.Contains("GO", StringComparison.CurrentCulture))
             {
