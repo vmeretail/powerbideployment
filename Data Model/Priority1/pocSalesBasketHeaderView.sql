@@ -19,5 +19,7 @@ SELECT
 	[Cashback Amount]            =ISNULL(salestransactioncompleted.CashbackAmount, 0),
 	[Promotion Amount Applied]	= ISNULL(salestransactioncompleted.PromotionAmountApplied, 0),
 	[Is Refund]					= salestransactioncompleted.IsRefund,
-	[Line Count] =				salestransactioncompleted.SalesTransactionLineCount
+	[Line Count] =				salestransactioncompleted.SalesTransactionLineCount,
+	StoreProjectionState.StoreReportingId
 FROM salestransactioncompleted
+inner join StoreProjectionState on StoreProjectionState.StoreId = salestransactioncompleted.StoreId

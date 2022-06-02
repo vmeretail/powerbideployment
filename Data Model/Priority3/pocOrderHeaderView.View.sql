@@ -30,9 +30,10 @@ count(*) as [Ordered Times Count],
 [OrderSLA] = CASE 
 				WHEN CASE WHEN SUM(ISNULL(NumberOfCasesOrdered,0)) = 0 THEN 1 ELSE SUM(ISNULL(NumberOfCasesDelivered,0)) / SUM(NumberOfCasesOrdered) END > 1 THEN 1
 				ELSE CASE WHEN SUM(ISNULL(NumberOfCasesOrdered,0)) = 0 THEN 1 ELSE SUM(ISNULL(NumberOfCasesDelivered,0)) / SUM(NumberOfCasesOrdered) END
-				END
-
+				END,
+StoreProjectionState.StoreReportingId
 from [order]
+inner join StoreProjectionState on StoreProjectionState.StoreId = [order].StoreId
 inner join orderItemProjectionState orderItem on orderItem.OrderId = [order].OrderId
 left outer join (
 	select delivery.OrderId, StoreProductId, NumberOfCasesDelivered 
@@ -44,6 +45,7 @@ GROUP BY [order].OrderId,
 [order].ExternalOrderId,
 [order].[Status],
 [order].StoreId,
+StoreProjectionState.StoreReportingId,
 [order].SupplierId,
 [order].CreatedDateTime,
 [order].ConfirmedDateTime,
