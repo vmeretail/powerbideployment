@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW pocCashRecReportSummary
+IF OBJECT_ID('dbo.pocCashRecReportSummary', 'V') IS NOT NULL 
+  DROP VIEW dbo.pocCashRecReportSummary; 
+GO; 
+
+CREATE VIEW pocCashRecReportSummary
 AS
 select saleType,FormattedSaleType, departmentid, storeId, [previous_basketCount], [previous_basketTotal], [previous_marginTotal], [current_basketCount], [current_basketTotal],[current_marginTotal]
 from 

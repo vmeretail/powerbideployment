@@ -1,4 +1,8 @@
-CREATE OR ALTER   VIEW [dbo].[pocOrderItemsView]
+IF OBJECT_ID('dbo.[pocOrderItemsView]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocOrderItemsView]; 
+GO; 
+
+CREATE VIEW [dbo].[pocOrderItemsView]
 AS
 SELECT 
 	[order].OrderId, 
@@ -30,11 +34,11 @@ SELECT
 	CONVERT(DECIMAL(18,2), ISNULL(rep.CostPrice, 0) * ISNULL([Swapped Cases Delivered], 0)) [Swapped Total Cost Price],
 	ISNULL(NumberOfCasesDelivered, 0) [Cases Delivered],
 	ISNULL([Swapped Cases Delivered], 0) [Swapped Cases Delivered],
-    CONCAT(orderItemProjectionState.SIC, ' (', supplierproduct.[Priority], ')') [Original Sic],
-	CONCAT([Swapped Sic], ' (', rep.[Priority], ')') [Swapped Sic],
+	orderItemProjectionState.SIC + ' (' + cast(supplierproduct.[Priority] as varchar(5)) + ')' as [Original Sic],
+	[Swapped Sic] + ' (' + cast(rep.[Priority] as varchar(5)) + ')' as [Swapped Sic],
 	CASE
-		WHEN OrganisationProductProjectionState.OrganisationProductId = rep.OrganisationProductId THEN CONCAT(supplier.SupplierName, ' (S)')
-		ELSE CONCAT(supplier.SupplierName, ' (D)')
+		WHEN OrganisationProductProjectionState.OrganisationProductId = rep.OrganisationProductId THEN supplier.SupplierName + ' (S)'
+		ELSE supplier.SupplierName + ' (D)'
 	END [Supplier Swapout Type]
 FROM [order]
 INNER JOIN orderItemProjectionState ON [order].orderId = orderItemProjectionState.OrderId

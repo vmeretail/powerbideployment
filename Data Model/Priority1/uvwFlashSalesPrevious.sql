@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[uvwFlashSalesPrevious]
+IF OBJECT_ID('dbo.[uvwFlashSalesPrevious]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[uvwFlashSalesPrevious]; 
+GO; 
+
+CREATE VIEW [dbo].[uvwFlashSalesPrevious]
 AS
 SELECT
 	FutureDate,

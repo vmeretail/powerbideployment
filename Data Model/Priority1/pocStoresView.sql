@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].pocStoresView
+IF OBJECT_ID('dbo.pocStoresView', 'V') IS NOT NULL 
+  DROP VIEW dbo.pocStoresView; 
+GO; 
+
+CREATE VIEW [dbo].pocStoresView
 AS
 SELECT 
 	StoreProjectionState.StoreId,

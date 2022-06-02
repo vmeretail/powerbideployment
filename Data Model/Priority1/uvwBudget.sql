@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[uvwBudget]
+IF OBJECT_ID('dbo.[uvwBudget]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[uvwBudget]; 
+GO; 
+
+CREATE VIEW [dbo].[uvwBudget]
 AS
 SELECT 
     [YearWeekNumber],

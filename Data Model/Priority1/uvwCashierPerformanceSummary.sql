@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[uvwCashierPerformanceSummary]
+IF OBJECT_ID('dbo.[uvwCashierPerformanceSummary]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[uvwCashierPerformanceSummary]; 
+GO; 
+
+CREATE VIEW [dbo].[uvwCashierPerformanceSummary]
 AS
 SELECT
 	[trading] [Trading Date],

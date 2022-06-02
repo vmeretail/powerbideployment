@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW uvwSalesSummaryByProduct
+IF OBJECT_ID('dbo.uvwSalesSummaryByProduct', 'V') IS NOT NULL 
+  DROP VIEW dbo.uvwSalesSummaryByProduct; 
+GO; 
+
+CREATE VIEW uvwSalesSummaryByProduct
 AS
     SELECT 
 	    [AggregateId]

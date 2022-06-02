@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW pocStoreProductActivityView
+IF OBJECT_ID('dbo.pocStoreProductActivityView', 'V') IS NOT NULL 
+  DROP VIEW dbo.pocStoreProductActivityView; 
+GO; 
+
+CREATE VIEW pocStoreProductActivityView
 AS
 select
 ActivityDate,

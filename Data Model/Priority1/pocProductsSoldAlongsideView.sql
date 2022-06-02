@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[pocProductsSoldAlongside]
+IF OBJECT_ID('dbo.[pocProductsSoldAlongside]', 'V') IS NOT NULL 
+  DROP VIEW dbo.[pocProductsSoldAlongside]; 
+GO; 
+
+CREATE VIEW [dbo].[pocProductsSoldAlongside]
 AS
 SELECT 
 	ai.antecedents,

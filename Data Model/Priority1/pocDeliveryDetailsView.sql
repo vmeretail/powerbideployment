@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW pocDeliveryDetailsView
+IF OBJECT_ID('dbo.pocDeliveryDetailsView', 'V') IS NOT NULL 
+  DROP VIEW dbo.pocDeliveryDetailsView; 
+GO; 
+
+CREATE VIEW pocDeliveryDetailsView
 AS
 SELECT
 	deliveryItem.StoreProductId as [ProductId],

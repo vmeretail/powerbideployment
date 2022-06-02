@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW uvwOrderConfirmations
+IF OBJECT_ID('dbo.uvwOrderConfirmations', 'V') IS NOT NULL 
+  DROP VIEW dbo.uvwOrderConfirmations; 
+GO; 
+
+CREATE VIEW uvwOrderConfirmations
 AS
     SELECT 
 		os.[Date] [Date],

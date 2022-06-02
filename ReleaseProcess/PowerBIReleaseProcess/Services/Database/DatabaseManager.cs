@@ -16,21 +16,38 @@
         {
             String fileName = Path.GetFileName(sqlFilePath);
 
+            String content = File.ReadAllText(sqlFilePath, Encoding.Latin1);
+            String[] commands = null;
+            if (content.Contains("GO", StringComparison.CurrentCulture))
+            {
+                commands = content.Split("GO;");
+            }
+            else
+            {
+                commands = new String[1];
+                commands[0] = content;
+            }
+
             try
             {
+                Logger.WriteToLog($"Running File {fileName}", LoggerCategory.General, TraceEventType.Information);
+
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
 
-                    using (SqlCommand command = new SqlCommand(File.ReadAllText(sqlFilePath, Encoding.Latin1), connection))
+                    foreach (String commandText in commands)
                     {
-                        Logger.WriteToLog($"Running File {fileName}", LoggerCategory.General, TraceEventType.Information);
 
-                        await command.ExecuteNonQueryAsync(CancellationToken.None);
+                        using (SqlCommand command = new SqlCommand(commandText, connection))
+                        {
 
-                        Logger.WriteToLog($"File {fileName} executed successfully", LoggerCategory.General, TraceEventType.Information);
+                            await command.ExecuteNonQueryAsync(CancellationToken.None);
+                        }
                     }
                 }
+
+                Logger.WriteToLog($"File {fileName} executed successfully", LoggerCategory.General, TraceEventType.Information);
             }
             catch (Exception ex)
             {
