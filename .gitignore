@@ -263,3 +263,4 @@ paket-files/
 /Vme.Eposity.Organisations/LoggingTest
 
 /Eposity.Testing.Integration/Eposity.Testing.Integration.Sales/xunit.runner.feature.cs
+/DataModel
