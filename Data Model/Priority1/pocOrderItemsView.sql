@@ -51,7 +51,7 @@ INNER JOIN (
 		delivery.OrderId, 
 		OriginalOrderItemId,
 		SUM(NumberOfCasesDelivered) NumberOfCasesDelivered
-	FROM delivery
+	FROM DeliveryProjectionState delivery
 	INNER JOIN deliveryItemProjectionState deliveryItem ON delivery.DeliveryId = deliveryItem.DeliveryId and OriginalOrderItemId IS NOT NULL
 	GROUP BY
 		delivery.OrderId, 
@@ -73,7 +73,7 @@ INNER JOIN (
 		SUM(NumberOfCasesDelivered) [Swapped Cases Delivered]
 	from orderItemProjectionState
 	INNER JOIN [order] ON [order].OrderId = orderItemProjectionState.OrderId
-	INNER JOIN delivery ON delivery.OrderId = orderItemProjectionState.OrderId
+	INNER JOIN DeliveryProjectionState delivery ON delivery.OrderId = orderItemProjectionState.OrderId
 	INNER JOIN deliveryItemProjectionState deliveryItem ON delivery.deliveryId = deliveryItem.deliveryid AND deliveryItem.OriginalOrderItemId = orderItemProjectionState.ExternalOrderItemId
 	INNER JOIN orderItemProjectionState rep ON orderItemProjectionState.OrderId = rep.OrderId AND rep.SIC = deliveryItem.Sic AND rep.StoreProductId = deliveryItem.StoreProductId
 	INNER JOIN supplierproduct ON supplierproduct.OrganisationProductId = rep.OrganisationProductId AND supplierproduct.SupplierId = [order].SupplierId AND supplierproduct.Sic = rep.SIC
