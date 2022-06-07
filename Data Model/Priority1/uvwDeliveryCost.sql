@@ -1,4 +1,8 @@
-CREATE OR ALTER VIEW [dbo].[uvwDeliveryCost]
+IF OBJECT_ID('dbo.uvwDeliveryCost', 'V') IS NOT NULL 
+  DROP VIEW dbo.uvwDeliveryCost; 
+GO; 
+
+CREATE VIEW [dbo].[uvwDeliveryCost]
 AS
 SELECT
 	DeliveryProjectionState.DeliveryReportingId [Delivery Reporting Id], 
