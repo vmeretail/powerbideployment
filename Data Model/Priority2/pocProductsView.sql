@@ -60,12 +60,7 @@ SELECT storeproduct.StoreProductId as [ProductId],
 	   priceState.MarginPercent as 'Margin%',
 
 	   storeproduct.NumberOfOrdersSinceLastDelivery as [Number Of Orders Since Last Delivery],
-	   CASE
-		WHEN CONVERT(DATE, FirstActivity) = CONVERT(DATE, GETDATE()) THEN 
-			CAST(NumberOfSales AS FLOAT) 
-		ELSE 
-			CAST(NumberOfSales / DATEDIFF(DAY, FirstActivity, GETDATE()) AS FLOAT) 
-	   END [Sales Per Day Average],
+	   AverageSalesPerDay as  [Sales Per Day Average],
 	   storeproduct.FailedDeliveryCountSinceLastDelivery as [NumberOfFailedDeliveriesSinceLastDelivery],
 
 	   organisationproduct.Description + ' ' + organisationproduct.ExternalProductId + ' ' + organisationproduct.Barcode + ' ' + organisationproduct.HighestPrioritySupplierSic as ProductFilter
