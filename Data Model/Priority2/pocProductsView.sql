@@ -13,7 +13,7 @@ SELECT storeproduct.StoreProductId as [ProductId],
 	   store.StoreReportingId,
 	   store.StoreName,
 
-	   priceState.Price as [StandardRetailPriceInc],
+	   ISNULL(priceState.Price,0) as [StandardRetailPriceInc],
 	   (ISNULL(priceState.Price,0) / (taxrate.Rate + 1)) as [StandardRetailPriceEx],
 
 	   storeproduct.CurrentMPL as CurrentMPL,
@@ -69,5 +69,5 @@ SELECT storeproduct.StoreProductId as [ProductId],
 FROM StoreProductStateProjection storeproduct
 inner join StoreProjectionState store on store.StoreReportingId = storeproduct.StoreReportingId
 inner join OrganisationProductProjectionState organisationproduct on organisationproduct.OrganisationProductReportingId = storeproduct.OrganisationProductReportingId
-inner join OrganisationProductPriceProjectionState priceState on priceState.OrganisationProductReportingId = organisationproduct.OrganisationProductReportingId and priceState.Band = store.PriceBand
+left outer join OrganisationProductPriceProjectionState priceState on priceState.OrganisationProductReportingId = organisationproduct.OrganisationProductReportingId and priceState.Band = store.PriceBand
 inner join taxrate on taxrate.TaxRateId = organisationproduct.TaxRateId
