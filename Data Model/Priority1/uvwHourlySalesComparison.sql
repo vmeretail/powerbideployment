@@ -9,7 +9,7 @@ SELECT
 	CONVERT(DATE, st1.CompletedDateHour) [Date],
 	st1.CompletedDateHour [DateHour],
 	store.StoreId,
-	store.Name [Store],
+	store.StoreName [Store],
 	st1.Gross [Gross Today],
 	st1.Net [Net Today],
 	st2.Gross [Gross Yesterday],
@@ -70,4 +70,4 @@ LEFT JOIN
 		StoreId,
 		DATEADD(HOUR, DATEPART(HOUR, CompletedDateTime), CONVERT(DATETIME, CONVERT(DATE, CompletedDateTime)))
 ) st4 ON st1.CompletedDateHour = DATEADD(MONTH, 1, st4.CompletedDateHour) AND st1.StoreId = st4.StoreId
-INNER JOIN store ON st1.StoreId = store.StoreId
+INNER JOIN storeprojectionstate store ON st1.StoreId = store.StoreId

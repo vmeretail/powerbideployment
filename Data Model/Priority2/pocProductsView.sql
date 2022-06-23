@@ -10,6 +10,7 @@ SELECT storeproduct.StoreProductId as [ProductId],
 	   organisationproduct.OrganisationProductId,
 	   organisationproduct.OrganisationProductReportingId as [OrganisationProductReportingId],
 	   store.StoreId,
+	   store.StoreReportingId,
 	   store.StoreName,
 
 	   priceState.Price as [StandardRetailPriceInc],
