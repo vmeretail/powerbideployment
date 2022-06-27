@@ -7,7 +7,7 @@ AS
 SELECT 
 	CompletedDate,
 	salestransactioncompleted.StoreReportingId,
-	COUNT(aggregateid) [Customer Count]
+	COUNT(distinct salestransactioncompleted.aggregateid) [Customer Count]
 FROM salestransactioncompleted
 inner join salestransactionline on salestransactionline.aggregateid = salestransactioncompleted.aggregateid
 inner join uvwHierarchyDepartmentView on uvwHierarchyDepartmentView.departmentid = salestransactionline.departmentid
