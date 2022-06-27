@@ -4,7 +4,7 @@ GO;
 
 CREATE PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime
 AS
-	DELETE FROM CashRecReporting WHERE ReportDate >= @reportStartDate
+	DELETE FROM CashRecReporting WHERE ReportDate = @reportStartDate
 
 		-- total sales
 	SELECT DISTINCT departmentId INTO #department from producthierarchy WITH(nolock)

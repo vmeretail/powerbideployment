@@ -86,5 +86,7 @@
         }
 
         public String CurrentVersion { get; set; }
+
+        public Boolean DemoApplication { get; set; }
     }
 }

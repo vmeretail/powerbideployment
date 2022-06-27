@@ -26,8 +26,9 @@ AS
         ,[Week]
         ,[DayOfWeekShort]
         ,[DayOfWeek]
-	    ,store.[Name] [Store] 
+	    ,store.[StoreName] [Store]
+        ,store.StoreReportingId
     FROM SalesSummaryByProduct
     INNER JOIN producthierarchy ON SalesSummaryByProduct.HierarchyNodeId = producthierarchy.ProductHierarchyId
     INNER JOIN OrganisationProductProjectionState ON SalesSummaryByProduct.OrganisationProductId = OrganisationProductProjectionState.OrganisationProductId
-    INNER JOIN store ON SalesSummaryByProduct.storeId = store.StoreId
+    INNER JOIN storeprojectionstate store ON SalesSummaryByProduct.storeId = store.StoreId

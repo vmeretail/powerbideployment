@@ -11,9 +11,10 @@ SELECT
 	Quantity, 
 	LineTotalInc, 
 	CompletedDate, 
-	store.[Name] Store, 
+	store.[StoreName] Store, 
+	store.storereportingid,
 	DepartmentName	
 FROM salestransactioncompleted
 INNER JOIN salestransactionline on salestransactionline.aggregateid = salestransactioncompleted.AggregateId
-INNER JOIN store ON store.StoreId = salestransactioncompleted.StoreId
+INNER JOIN storeprojectionstate store ON store.StoreId = salestransactioncompleted.StoreId
 INNER JOIN producthierarchy ON producthierarchy.ProductHierarchyId = salestransactionline.departmentId
