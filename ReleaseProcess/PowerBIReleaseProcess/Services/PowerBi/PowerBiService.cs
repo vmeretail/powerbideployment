@@ -114,6 +114,12 @@
             Dictionary<String, String> parameters = new Dictionary<String, String>();
             parameters.Add("DatabaseName", customerConfiguration.ReadModelDatabaseName);
             parameters.Add("DatabaseServer", customerConfiguration.ReadModelDatabaseSever);
+            if (customerConfiguration.DemoApplication ==  true) {
+                parameters.Add("IsDemo", "1");
+            }
+            else {
+                parameters.Add("IsDemo", "0");
+            }
 
             // Update the parameters of the dataset
             (Boolean success, String message) changeResult = await ChangeDatasetParameters(customerConfiguration.GroupId, checkResult.uploadedFileId, parameters, cancellationToken);

@@ -135,8 +135,22 @@
 
                 PowerBiCustomerConfiguration customerConfiguration = this.MainFormViewModel.SelectedApplication;
                 String selectedVersion = e;
-                this.MainForm.writeNormal($"About to start release of version {selectedVersion} to customer {customerConfiguration.Name}");
 
+                this.MainForm.writeNormal($"About to start release of version {selectedVersion} to customer {customerConfiguration.Name}");
+                if (customerConfiguration.DemoApplication == true) {
+                    var result = MessageBox.Show($"Applcation {customerConfiguration.Name} will be configured as as demo application, confirm this in intended",
+                                    "Confirm Demo Application",
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Exclamation,
+                                    MessageBoxDefaultButton.Button2);
+
+                    // user has setup as demo app in error or just cancelled
+                    if (result == DialogResult.Cancel)
+                        return;
+
+                    this.MainForm.writeNormal("Application in demo mode");
+                }
+                
                 String outputPath = "C:\\Temp\\PBIWorking";
 
                 CancellationToken cancellationToken = new CancellationToken();
