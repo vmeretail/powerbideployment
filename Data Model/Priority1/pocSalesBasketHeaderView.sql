@@ -24,6 +24,9 @@ SELECT
 	[Promotion Amount Applied]	= ISNULL(salestransactioncompleted.PromotionAmountApplied, 0),
 	[Is Refund]					= salestransactioncompleted.IsRefund,
 	[Line Count] =				salestransactioncompleted.SalesTransactionLineCount,
+	[TillId] = salestransactioncompleted.tillNumber,
+	salestransactioncompleted.transactionNumber,
+	salestransactioncompleted.transactionId,
 	StoreProjectionState.StoreReportingId
 FROM salestransactioncompleted
 inner join StoreProjectionState on StoreProjectionState.StoreId = salestransactioncompleted.StoreId
