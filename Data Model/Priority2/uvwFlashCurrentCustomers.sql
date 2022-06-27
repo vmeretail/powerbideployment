@@ -6,12 +6,14 @@ CREATE VIEW [dbo].[uvwFlashCurrentCustomers]
 AS
 SELECT 
 	CompletedDate,
-	uvwStoresView.StoreReportingId,
-	COUNT(aggregateid) [Customer Count]
+	salestransactioncompleted.StoreReportingId,
+	COUNT(distinct salestransactioncompleted.aggregateid) [Customer Count]
 FROM salestransactioncompleted
-INNER JOIN uvwStoresView ON salestransactioncompleted.StoreId = uvwStoresView.StoreId
+inner join salestransactionline on salestransactionline.aggregateid = salestransactioncompleted.aggregateid
+inner join uvwHierarchyDepartmentView on uvwHierarchyDepartmentView.departmentid = salestransactionline.departmentid
 WHERE salestransactioncompleted.BasketTotal != 0
+	  and salestransactioncompleted.AmountToPayWasVoided = 0
 GROUP BY
 	CompletedDate,
-	uvwStoresView.StoreReportingId
+	salestransactioncompleted.StoreReportingId
 
