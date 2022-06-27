@@ -118,6 +118,10 @@
                                                String outputPath)
         {
             String customerDirectory = $"{outputPath}\\{customer}";
+            if (Directory.Exists(customerDirectory))
+            {
+                Directory.Delete(customerDirectory, true);
+            }
             Directory.CreateDirectory(customerDirectory);
 
             this.CopyFilesRecursively($"{outputPath}\\extract", customerDirectory);
@@ -152,7 +156,7 @@
                 }
                 
                 String outputPath = "C:\\Temp\\PBIWorking";
-
+                
                 CancellationToken cancellationToken = new CancellationToken();
 
                 Directory.CreateDirectory(outputPath);
@@ -318,6 +322,24 @@
         }
 
         #endregion
+
+        public static void RecursiveDelete(DirectoryInfo baseDir)
+        {
+            if (!baseDir.Exists)
+                return;
+
+            foreach (var dir in baseDir.EnumerateDirectories())
+            {
+                RecursiveDelete(dir);
+            }
+            var files = baseDir.GetFiles();
+            foreach (var file in files)
+            {
+                file.IsReadOnly = false;
+                file.Delete();
+            }
+            baseDir.Delete();
+        }
 
         #region Methods
 
