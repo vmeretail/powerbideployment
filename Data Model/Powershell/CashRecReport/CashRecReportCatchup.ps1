@@ -1,4 +1,4 @@
-param ([String] $username, [String] $password, [String] $instance, [String] $db
+param ([String] $username, [String] $password, [String] $instance, [String] $db)
 
 $startdate = "";
 $startdate = Get-Date

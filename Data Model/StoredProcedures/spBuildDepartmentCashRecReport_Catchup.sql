@@ -1,8 +1,8 @@
-IF OBJECT_ID('dbo.[spBuildDepartmentCashRecReport]', 'P') IS NOT NULL 
-  DROP PROCEDURE dbo.[spBuildDepartmentCashRecReport]; 
+IF OBJECT_ID('dbo.[spBuildDepartmentCashRecReport_Catchup]', 'P') IS NOT NULL 
+  DROP PROCEDURE dbo.[spBuildDepartmentCashRecReport_Catchup]; 
 GO; 
 
-CREATE PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime
+CREATE PROCEDURE [dbo].[spBuildDepartmentCashRecReport_Catchup] @reportStartDate datetime
 AS
 		-- Calculate the number for days to catch up
 	declare @startDate datetime
