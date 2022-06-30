@@ -4,10 +4,12 @@ GO;
 
 CREATE PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime
 AS
-	DELETE FROM CashRecReporting WHERE ReportDate = @reportStartDate
+		DELETE FROM CashRecReporting WHERE ReportDate = @reportStartDate
 
 		-- total sales
 	SELECT DISTINCT departmentId INTO #department from producthierarchy WITH(nolock)
+
+	select * into #tempsalelines from salestransactionline where EntryDate = @reportStartDate
 
 	INSERT INTO CashRecReporting
 	(
@@ -45,20 +47,20 @@ AS
 	FROM salestransactioncompleted WITH(nolock)
 	INNER JOIN
 	(
-		SELECT DISTINCT a.aggregateId, departmentId 
+		SELECT DISTINCT a.aggregateId, departmentId, entrydate 
 		FROM 
 		(
 			SELECT aggregateId 
-			FROM salestransactionline
+			FROM #tempsalelines
 			GROUP BY aggregateId
 			HAVING COUNT(DISTINCT departmentId) = 1
 		) a
 		INNER JOIN  
 		(
-			SELECT aggregateId, departmentId
-			FROM salestransactionline
+			SELECT aggregateId, departmentId, entrydate
+			FROM #tempsalelines
 		) b ON a.AggregateId = b.AggregateId
-	) result ON salestransactioncompleted.AggregateId = result.AggregateId
+	) result ON salestransactioncompleted.AggregateId = result.AggregateId and salestransactioncompleted.CompletedDate = result.EntryDate
 	WHERE salestransactioncompleted.CompletedDate = @reportStartDate AND departmentId IS NOT NULL
 	GROUP BY salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, departmentId
 
@@ -76,20 +78,20 @@ AS
 	FROM salestransactioncompleted WITH(nolock)
 	INNER JOIN 
 	(
-		SELECT DISTINCT a.aggregateId, departmentId 
+		SELECT DISTINCT a.aggregateId, departmentId, entrydate 
 		FROM 
 		(
 			SELECT aggregateId 
-			FROM salestransactionline
+			FROM #tempsalelines
 			GROUP BY aggregateId
 			HAVING COUNT(DISTINCT departmentId) > 1
 		) a
 		INNER JOIN  
 		(
-			SELECT aggregateId, departmentId
-			FROM salestransactionline
+			SELECT aggregateId, departmentId, entrydate
+			FROM #tempsalelines
 		) b ON a.AggregateId = b.AggregateId
-	) result ON salestransactioncompleted.AggregateId = result.AggregateId
+	) result ON salestransactioncompleted.AggregateId = result.AggregateId and salestransactioncompleted.CompletedDate = result.EntryDate
 	WHERE salestransactioncompleted.CompletedDate = @reportStartDate AND departmentId IS NOT NULL
 	GROUP BY salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId, departmentId
 
@@ -98,10 +100,11 @@ AS
 		SELECT DISTINCT [DepartmentId]
 		FROM [dbo].[producthierarchy]
 	
-	SELECT salestransactionline.aggregateId, salestransactionline.departmentId
+	SELECT #tempsalelines.aggregateId, #tempsalelines.departmentId
 	INTO #salesInReportDate
-	FROM salestransactionline WITH(nolock)
-	INNER JOIN salestransactioncompleted WITH(nolock) ON salestransactioncompleted.AggregateId = salestransactionline.aggregateId
+	FROM #tempsalelines WITH(nolock)
+	INNER JOIN salestransactioncompleted WITH(nolock) ON salestransactioncompleted.AggregateId = #tempsalelines.aggregateId
+														AND salestransactioncompleted.CompletedDate = #tempsalelines.EntryDate
 	WHERE salestransactioncompleted.CompletedDate = @reportStartDate
 
 	OPEN db_cursor  
@@ -130,14 +133,14 @@ AS
 			SUM(salestransactioncompleted.MarginValue)
 		FROM 
 		(
-			SELECT DISTINCT salestransactionline.aggregateId 
-			FROM salestransactionline WITH(nolock)
-			INNER JOIN #salesInReportDate on #salesInReportDate.aggregateId = salestransactionline.aggregateId
-			WHERE salestransactionline.aggregateId NOT IN (SELECT DISTINCT #salesInReportDate.aggregateId
+			SELECT DISTINCT #tempsalelines.aggregateId, #tempsalelines.EntryDate 
+			FROM #tempsalelines WITH(nolock)
+			INNER JOIN #salesInReportDate on #salesInReportDate.aggregateId = #tempsalelines.aggregateId
+			WHERE #tempsalelines.aggregateId NOT IN (SELECT DISTINCT #salesInReportDate.aggregateId
 			FROM #salesInReportDate
 			WHERE departmentId = @DepartmentId)
 		) AS result
-		INNER JOIN salestransactioncompleted WITH(nolock) ON salestransactioncompleted.AggregateId = result.AggregateId
+		INNER JOIN salestransactioncompleted WITH(nolock) ON salestransactioncompleted.AggregateId = result.AggregateId AND salestransactioncompleted.CompletedDate = result.EntryDate
 		group by salestransactioncompleted.CompletedDate, salestransactioncompleted.StoreId	
     
 		declare @includingcount int
