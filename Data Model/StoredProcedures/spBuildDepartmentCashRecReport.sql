@@ -2,8 +2,13 @@ IF OBJECT_ID('dbo.[spBuildDepartmentCashRecReport]', 'P') IS NOT NULL
   DROP PROCEDURE dbo.[spBuildDepartmentCashRecReport]; 
 GO; 
 
-CREATE PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime
+CREATE PROCEDURE [dbo].[spBuildDepartmentCashRecReport] @reportStartDate datetime = NULL
 AS
+	IF (@reportStartDate IS NULL)
+	BEGIN
+		SET @reportStartDate = CONVERT(DATE,GETDATE())
+	END
+
 		DELETE FROM CashRecReporting WHERE ReportDate = @reportStartDate
 
 		-- total sales
